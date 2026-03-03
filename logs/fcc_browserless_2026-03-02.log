@@ -1,0 +1,978 @@
+2026-03-02 11:37:17 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 11:37:17 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 11:37:17 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 11:37:17 | INFO     | === Processing UZ7 ===
+2026-03-02 11:37:17 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 11:37:18 | INFO     | Connecting to Browserless cloud...
+2026-03-02 11:37:20 | INFO     | Successfully connected to Browserless
+2026-03-02 11:37:20 | INFO     | Navigating to FCC search page for UZ7 (attempt 1/3)...
+2026-03-02 11:37:21 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:37:25 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 11:37:26 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 11:37:29 | INFO     | Clicking search for grantee: UZ7
+2026-03-02 11:37:31 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:37:34 | WARNING  | Timeout waiting for results: Page.wait_for_selector: Unexpected token "=" while parsing css selector "table, .noResults, .norecords, text=No records found". Did you mean to CSS.escape it?
+Call log:
+  - waiting for table, .noResults, .norecords, text=No records found to be visible
+
+2026-03-02 11:37:38 | DEBUG    | Table headers: ['', 'search|rss |updates |e-filing |initiatives |consumers |find people', 'search|rss |updates |e-filing |initiatives |consumers |find people', '', '']
+2026-03-02 11:37:39 | WARNING  | Error parsing row: 'coroutine' object has no attribute 'strip'
+2026-03-02 11:37:39 | WARNING  | Error parsing row: 'coroutine' object has no attribute 'strip'
+2026-03-02 11:37:39 | INFO     | Found 0 records for UZ7
+2026-03-02 11:37:40 | INFO     | Disconnected from Browserless
+2026-03-02 11:37:40 | ERROR    | Browserless crawl failed for UZ7: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 11:37:40 | INFO     | === Crawl Complete ===
+2026-03-02 11:37:40 | INFO     | Total new records: 0
+2026-03-02 11:37:40 | INFO     | Total errors: 1
+2026-03-02 11:38:24 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 11:38:24 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 11:38:24 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 11:38:24 | INFO     | === Processing UZ7 ===
+2026-03-02 11:38:24 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 11:38:25 | INFO     | Connecting to Browserless cloud...
+2026-03-02 11:38:27 | INFO     | Successfully connected to Browserless
+2026-03-02 11:38:27 | INFO     | Navigating to FCC search page for UZ7 (attempt 1/3)...
+2026-03-02 11:38:28 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:38:32 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 11:38:33 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 11:38:36 | INFO     | Clicking search for grantee: UZ7
+2026-03-02 11:38:38 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:38:46 | DEBUG    | Table headers: ['', 'search|rss |updates |e-filing |initiatives |consumers |find people', 'search|rss |updates |e-filing |initiatives |consumers |find people', '', '']
+2026-03-02 11:38:49 | INFO     | Found 1 records for UZ7
+2026-03-02 11:38:49 | INFO     | Disconnected from Browserless
+2026-03-02 11:38:49 | DEBUG    | Telegram not configured, skipping notification
+2026-03-02 11:38:49 | DEBUG    | Discord not configured, skipping notification
+2026-03-02 11:38:49 | INFO     | === Crawl Complete ===
+2026-03-02 11:38:49 | INFO     | Total new records: 1
+2026-03-02 11:38:49 | INFO     | Total errors: 0
+2026-03-02 11:43:56 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 11:43:56 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 11:43:56 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 11:43:56 | INFO     | === Processing UZ7 ===
+2026-03-02 11:43:56 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 11:43:57 | INFO     | Connecting to Browserless cloud...
+2026-03-02 11:43:59 | INFO     | Successfully connected to Browserless
+2026-03-02 11:43:59 | INFO     | Navigating to FCC search page for UZ7 (attempt 1/3)...
+2026-03-02 11:44:00 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:44:04 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 11:44:05 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 11:44:08 | INFO     | Clicking search for grantee: UZ7
+2026-03-02 11:44:10 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:44:15 | DEBUG    | Total rows found: 43
+2026-03-02 11:44:57 | WARNING  | Error parsing row 22: ElementHandle.inner_text: Target page, context or browser has been closed
+Call log:
+  - waiting for locator(":scope")
+
+2026-03-02 11:44:57 | ERROR    | Error parsing results: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:44:57 | INFO     | Found 0 records for UZ7
+2026-03-02 11:44:58 | INFO     | Disconnected from Browserless
+2026-03-02 11:44:58 | ERROR    | Browserless crawl failed for UZ7: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 11:44:58 | INFO     | === Crawl Complete ===
+2026-03-02 11:44:58 | INFO     | Total new records: 0
+2026-03-02 11:44:58 | INFO     | Total errors: 1
+2026-03-02 11:45:54 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 11:45:54 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 11:45:54 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 11:45:54 | INFO     | === Processing UZ7 ===
+2026-03-02 11:45:54 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 11:45:55 | INFO     | Connecting to Browserless cloud...
+2026-03-02 11:45:58 | INFO     | Successfully connected to Browserless
+2026-03-02 11:45:58 | INFO     | Navigating to FCC search page for UZ7 (attempt 1/3)...
+2026-03-02 11:45:58 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:46:03 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 11:46:04 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 11:46:07 | INFO     | Clicking search for grantee: UZ7
+2026-03-02 11:46:09 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:46:16 | DEBUG    | Total rows found: 43
+2026-03-02 11:46:56 | DEBUG    | Parsed record: UZ7MC27AK - UZ7MC27AK - Original Equipment
+2026-03-02 11:46:56 | WARNING  | Error parsing row 23: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 24: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 25: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 26: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 27: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 28: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 29: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 30: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 31: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 32: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 33: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 34: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 35: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 36: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 37: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 38: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 39: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 40: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 41: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | WARNING  | Error parsing row 42: ElementHandle.query_selector_all: Target page, context or browser has been closed
+2026-03-02 11:46:56 | INFO     | Parsed 1 records from FCC search results
+2026-03-02 11:46:56 | INFO     | Found 1 records for UZ7
+2026-03-02 11:46:56 | INFO     | Disconnected from Browserless
+2026-03-02 11:46:56 | DEBUG    | Telegram not configured, skipping notification
+2026-03-02 11:46:56 | DEBUG    | Discord not configured, skipping notification
+2026-03-02 11:46:56 | INFO     | === Crawl Complete ===
+2026-03-02 11:46:56 | INFO     | Total new records: 1
+2026-03-02 11:46:56 | INFO     | Total errors: 0
+2026-03-02 11:47:41 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 11:47:41 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 11:47:41 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 11:47:41 | INFO     | === Processing UZ7 ===
+2026-03-02 11:47:41 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 11:47:42 | INFO     | Connecting to Browserless cloud...
+2026-03-02 11:47:44 | INFO     | Successfully connected to Browserless
+2026-03-02 11:47:44 | INFO     | Navigating to FCC search page for UZ7 (attempt 1/3)...
+2026-03-02 11:47:45 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:47:49 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 11:47:50 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 11:47:53 | INFO     | Clicking search for grantee: UZ7
+2026-03-02 11:47:55 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:48:01 | DEBUG    | JavaScript extracted 11 records
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7MC27AK - UZ7MC27AK - Original Equipment
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7MC27AK - 11/07/2020 - 2402.0
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7MC27AK - 11/07/2020 - 2412.0
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7AP6 - 09/30/2011 - 2412.0
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7AP6 - 09/30/2011 - 2422.0
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7AP6 - 09/30/2011 - 5745.0
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7AP6 - 09/30/2011 - 5755.0
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7CCHUB1 - 03/18/2013 - 2402.0
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7TC56CJ - 05/23/2018 - 2402.0
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7TC56CJ - 05/23/2018 - 2412.0
+2026-03-02 11:48:01 | DEBUG    | Parsed record: UZ7ET51CE - 06/27/2019 - 2402.0
+2026-03-02 11:48:01 | INFO     | Parsed 11 records from FCC search results
+2026-03-02 11:48:01 | INFO     | Found 11 records for UZ7
+2026-03-02 11:48:02 | INFO     | Disconnected from Browserless
+2026-03-02 11:48:02 | DEBUG    | Telegram not configured, skipping notification
+2026-03-02 11:48:02 | DEBUG    | Discord not configured, skipping notification
+2026-03-02 11:48:02 | INFO     | === Crawl Complete ===
+2026-03-02 11:48:02 | INFO     | Total new records: 5
+2026-03-02 11:48:02 | INFO     | Total errors: 0
+2026-03-02 11:49:22 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 11:49:22 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 11:49:22 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 11:49:22 | INFO     | === Processing UZ7 ===
+2026-03-02 11:49:22 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 11:49:23 | INFO     | Connecting to Browserless cloud...
+2026-03-02 11:49:25 | INFO     | Successfully connected to Browserless
+2026-03-02 11:49:25 | INFO     | Navigating to FCC search page for UZ7 (attempt 1/3)...
+2026-03-02 11:49:26 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:49:31 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 11:49:32 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 11:49:35 | INFO     | Clicking search for grantee: UZ7
+2026-03-02 11:49:37 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:49:43 | DEBUG    | JavaScript extracted 11 records
+2026-03-02 11:49:43 | DEBUG    | Parsed record: UZ7MC27AK - UZ7MC27AK - Original Equipment
+2026-03-02 11:49:43 | DEBUG    | Parsed record: UZ7AP6 - 09/30/2011 - 2412.0
+2026-03-02 11:49:43 | DEBUG    | Parsed record: UZ7CCHUB1 - 03/18/2013 - 2402.0
+2026-03-02 11:49:43 | DEBUG    | Parsed record: UZ7TC56CJ - 05/23/2018 - 2402.0
+2026-03-02 11:49:43 | DEBUG    | Parsed record: UZ7ET51CE - 06/27/2019 - 2402.0
+2026-03-02 11:49:43 | INFO     | Parsed 5 unique records from FCC search results
+2026-03-02 11:49:43 | INFO     | Found 5 records for UZ7
+2026-03-02 11:49:43 | INFO     | Disconnected from Browserless
+2026-03-02 11:49:43 | DEBUG    | Telegram not configured, skipping notification
+2026-03-02 11:49:43 | DEBUG    | Discord not configured, skipping notification
+2026-03-02 11:49:43 | INFO     | === Crawl Complete ===
+2026-03-02 11:49:43 | INFO     | Total new records: 1
+2026-03-02 11:49:43 | INFO     | Total errors: 0
+2026-03-02 11:50:55 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 11:50:55 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 11:50:55 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 11:50:55 | INFO     | === Processing UZ7 ===
+2026-03-02 11:50:55 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 11:50:56 | INFO     | Connecting to Browserless cloud...
+2026-03-02 11:50:59 | INFO     | Successfully connected to Browserless
+2026-03-02 11:50:59 | INFO     | Navigating to FCC search page for UZ7 (attempt 1/3)...
+2026-03-02 11:50:59 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:51:05 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 11:51:06 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 11:51:09 | INFO     | Clicking search for grantee: UZ7
+2026-03-02 11:51:11 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:51:17 | DEBUG    | JavaScript extracted 11 records
+2026-03-02 11:51:17 | DEBUG    | Parsed record: UZ7MC27AK - UZ7MC27AK - Original Equipment
+2026-03-02 11:51:17 | DEBUG    | Parsed record: UZ7AP6 - 09/30/2011 - 2412.0
+2026-03-02 11:51:17 | DEBUG    | Parsed record: UZ7CCHUB1 - 03/18/2013 - 2402.0
+2026-03-02 11:51:17 | DEBUG    | Parsed record: UZ7TC56CJ - 05/23/2018 - 2402.0
+2026-03-02 11:51:17 | DEBUG    | Parsed record: UZ7ET51CE - 06/27/2019 - 2402.0
+2026-03-02 11:51:17 | INFO     | Parsed 5 unique records from FCC search results
+2026-03-02 11:51:17 | INFO     | Found 5 records for UZ7
+2026-03-02 11:51:17 | INFO     | Disconnected from Browserless
+2026-03-02 11:51:17 | DEBUG    | Telegram not configured, skipping notification
+2026-03-02 11:51:17 | DEBUG    | Discord not configured, skipping notification
+2026-03-02 11:51:17 | INFO     | === Crawl Complete ===
+2026-03-02 11:51:17 | INFO     | Total new records: 1
+2026-03-02 11:51:17 | INFO     | Total errors: 0
+2026-03-02 11:51:37 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 11:51:37 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 11:51:37 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 11:51:37 | INFO     | === Processing HD5 ===
+2026-03-02 11:51:37 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 11:51:38 | INFO     | Connecting to Browserless cloud...
+2026-03-02 11:51:40 | INFO     | Successfully connected to Browserless
+2026-03-02 11:51:40 | INFO     | Navigating to FCC search page for HD5 (attempt 1/3)...
+2026-03-02 11:51:40 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:51:45 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 11:51:46 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 11:51:49 | INFO     | Clicking search for grantee: HD5
+2026-03-02 11:51:51 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:51:57 | DEBUG    | JavaScript extracted 5 records
+2026-03-02 11:51:57 | DEBUG    | Parsed record: HD5BASESAWRF - HD5BASESAWRF - Original Equipment
+2026-03-02 11:51:57 | DEBUG    | Parsed record: HD5LWRFSAW - 10/02/1995 - 916.5
+2026-03-02 11:51:57 | DEBUG    | Parsed record: HD5LWRFU1M24A00 - 11/08/1989 - 450.0
+2026-03-02 11:51:57 | DEBUG    | Parsed record: HD5MW3SAWRF - 12/14/1993 - 916.6
+2026-03-02 11:51:57 | INFO     | Parsed 4 unique records from FCC search results
+2026-03-02 11:51:57 | INFO     | Found 4 records for HD5
+2026-03-02 11:51:57 | INFO     | Disconnected from Browserless
+2026-03-02 11:51:57 | DEBUG    | Telegram not configured, skipping notification
+2026-03-02 11:51:57 | DEBUG    | Discord not configured, skipping notification
+2026-03-02 11:51:57 | INFO     | === Crawl Complete ===
+2026-03-02 11:51:57 | INFO     | Total new records: 4
+2026-03-02 11:51:57 | INFO     | Total errors: 0
+2026-03-02 11:52:41 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 11:52:41 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 11:52:41 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 11:52:41 | INFO     | === Processing UZ7 ===
+2026-03-02 11:52:41 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 11:52:42 | INFO     | Connecting to Browserless cloud...
+2026-03-02 11:52:45 | INFO     | Successfully connected to Browserless
+2026-03-02 11:52:45 | INFO     | Navigating to FCC search page for UZ7 (attempt 1/3)...
+2026-03-02 11:52:45 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:52:50 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 11:52:51 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 11:52:54 | INFO     | Clicking search for grantee: UZ7
+2026-03-02 11:52:56 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:53:02 | DEBUG    | JavaScript extracted 11 records
+2026-03-02 11:53:02 | DEBUG    | Skipping record with invalid app_type: UZ7MC27AK
+2026-03-02 11:53:02 | DEBUG    | Parsed record: UZ7MC27AK - 11/07/2020 - 2402.0
+2026-03-02 11:53:02 | DEBUG    | Parsed record: UZ7AP6 - 09/30/2011 - 2412.0
+2026-03-02 11:53:02 | DEBUG    | Parsed record: UZ7CCHUB1 - 03/18/2013 - 2402.0
+2026-03-02 11:53:02 | DEBUG    | Parsed record: UZ7TC56CJ - 05/23/2018 - 2402.0
+2026-03-02 11:53:02 | DEBUG    | Parsed record: UZ7ET51CE - 06/27/2019 - 2402.0
+2026-03-02 11:53:02 | INFO     | Parsed 5 unique records from FCC search results
+2026-03-02 11:53:02 | INFO     | Found 5 records for UZ7
+2026-03-02 11:53:02 | INFO     | Disconnected from Browserless
+2026-03-02 11:53:02 | DEBUG    | Telegram not configured, skipping notification
+2026-03-02 11:53:02 | DEBUG    | Discord not configured, skipping notification
+2026-03-02 11:53:02 | INFO     | === Crawl Complete ===
+2026-03-02 11:53:02 | INFO     | Total new records: 5
+2026-03-02 11:53:02 | INFO     | Total errors: 0
+2026-03-02 11:53:14 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 11:53:14 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 11:53:14 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 11:53:14 | INFO     | === Processing HD5 ===
+2026-03-02 11:53:14 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 11:53:15 | INFO     | Connecting to Browserless cloud...
+2026-03-02 11:53:17 | INFO     | Successfully connected to Browserless
+2026-03-02 11:53:17 | INFO     | Navigating to FCC search page for HD5 (attempt 1/3)...
+2026-03-02 11:53:18 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:53:23 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 11:53:24 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 11:53:27 | INFO     | Clicking search for grantee: HD5
+2026-03-02 11:53:29 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 11:53:36 | DEBUG    | JavaScript extracted 5 records
+2026-03-02 11:53:36 | DEBUG    | Skipping record with invalid app_type: HD5BASESAWRF
+2026-03-02 11:53:36 | DEBUG    | Parsed record: HD5BASESAWRF - 06/06/1994 - 902.0
+2026-03-02 11:53:36 | DEBUG    | Parsed record: HD5LWRFSAW - 10/02/1995 - 916.5
+2026-03-02 11:53:36 | DEBUG    | Parsed record: HD5LWRFU1M24A00 - 11/08/1989 - 450.0
+2026-03-02 11:53:36 | DEBUG    | Parsed record: HD5MW3SAWRF - 12/14/1993 - 916.6
+2026-03-02 11:53:36 | INFO     | Parsed 4 unique records from FCC search results
+2026-03-02 11:53:36 | INFO     | Found 4 records for HD5
+2026-03-02 11:53:36 | INFO     | Disconnected from Browserless
+2026-03-02 11:53:36 | DEBUG    | Telegram not configured, skipping notification
+2026-03-02 11:53:36 | DEBUG    | Discord not configured, skipping notification
+2026-03-02 11:53:36 | INFO     | === Crawl Complete ===
+2026-03-02 11:53:36 | INFO     | Total new records: 4
+2026-03-02 11:53:36 | INFO     | Total errors: 0
+2026-03-02 12:24:22 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 12:24:22 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 12:24:22 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 12:24:22 | INFO     | === Processing HLE ===
+2026-03-02 12:24:22 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 12:24:23 | INFO     | Connecting to Browserless cloud...
+2026-03-02 12:24:25 | INFO     | Successfully connected to Browserless
+2026-03-02 12:24:25 | INFO     | Navigating to FCC search page for HLE (attempt 1/3)...
+2026-03-02 12:24:26 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 12:24:31 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 12:24:32 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 12:24:35 | INFO     | Clicking search for grantee: HLE
+2026-03-02 12:24:37 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 12:24:43 | DEBUG    | JavaScript extracted 10 records
+2026-03-02 12:24:43 | DEBUG    | Skipping record with invalid app_type: HLE22UPCWAND100
+2026-03-02 12:24:43 | DEBUG    | Parsed record: HLEPA760BTNFL - 07/29/2019 - 5180.0
+2026-03-02 12:24:43 | DEBUG    | Parsed record: HLEMS652BT - 04/30/2018 - 2402.0
+2026-03-02 12:24:43 | DEBUG    | Parsed record: HLETB162BTNFL - 06/24/2020 - 5180.0
+2026-03-02 12:24:43 | INFO     | Parsed 3 unique records from FCC search results
+2026-03-02 12:24:43 | INFO     | Found 3 records for HLE
+2026-03-02 12:24:43 | INFO     | Disconnected from Browserless
+2026-03-02 12:24:43 | DEBUG    | Telegram not configured, skipping notification
+2026-03-02 12:24:43 | DEBUG    | Discord not configured, skipping notification
+2026-03-02 12:24:43 | INFO     | === Crawl Complete ===
+2026-03-02 12:24:43 | INFO     | Total new records: 3
+2026-03-02 12:24:43 | INFO     | Total errors: 0
+2026-03-02 14:02:04 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 14:02:04 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 14:02:04 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 14:02:04 | INFO     | === Processing V2X ===
+2026-03-02 14:02:04 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 14:02:05 | INFO     | Connecting to Browserless cloud...
+2026-03-02 14:02:07 | INFO     | Successfully connected to Browserless
+2026-03-02 14:02:07 | INFO     | Navigating to FCC search page for V2X (attempt 1/3)...
+2026-03-02 14:02:08 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 14:02:12 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 14:02:13 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 14:02:17 | INFO     | Clicking search for grantee: V2X
+2026-03-02 14:02:18 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 14:02:25 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 14:02:25 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 14:02:25 | INFO     | Found 0 records for V2X
+2026-03-02 14:02:25 | INFO     | Disconnected from Browserless
+2026-03-02 14:02:25 | ERROR    | Browserless crawl failed for V2X: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 14:02:25 | INFO     | === Crawl Complete ===
+2026-03-02 14:02:25 | INFO     | Total new records: 0
+2026-03-02 14:02:25 | INFO     | Total errors: 1
+2026-03-02 14:02:48 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 14:02:48 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 14:02:48 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 14:02:48 | INFO     | === Processing V2X ===
+2026-03-02 14:02:48 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 14:02:49 | INFO     | Connecting to Browserless cloud...
+2026-03-02 14:02:52 | INFO     | Successfully connected to Browserless
+2026-03-02 14:02:52 | INFO     | Navigating to FCC search page for V2X (attempt 1/3)...
+2026-03-02 14:02:52 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 14:02:57 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 14:02:58 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 14:03:01 | INFO     | Clicking search for grantee: V2X
+2026-03-02 14:03:03 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 14:03:09 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 14:03:09 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 14:03:09 | INFO     | Found 0 records for V2X
+2026-03-02 14:03:09 | INFO     | Disconnected from Browserless
+2026-03-02 14:03:09 | ERROR    | Browserless crawl failed for V2X: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 14:03:09 | INFO     | === Crawl Complete ===
+2026-03-02 14:03:09 | INFO     | Total new records: 0
+2026-03-02 14:03:09 | INFO     | Total errors: 1
+2026-03-02 14:05:17 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 14:05:17 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 14:05:17 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 14:05:17 | INFO     | === Processing V2X ===
+2026-03-02 14:05:17 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 14:05:18 | INFO     | Connecting to Browserless cloud...
+2026-03-02 14:05:20 | INFO     | Successfully connected to Browserless
+2026-03-02 14:05:20 | INFO     | Navigating to FCC search page for V2X (attempt 1/3)...
+2026-03-02 14:05:21 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 14:05:26 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 14:05:27 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 14:05:30 | INFO     | Clicking search for grantee: V2X
+2026-03-02 14:05:33 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 14:05:39 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 14:05:39 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 14:05:39 | INFO     | Found 0 records for V2X
+2026-03-02 14:05:39 | INFO     | Disconnected from Browserless
+2026-03-02 14:05:39 | ERROR    | Browserless crawl failed for V2X: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 14:05:39 | INFO     | === Crawl Complete ===
+2026-03-02 14:05:39 | INFO     | Total new records: 0
+2026-03-02 14:05:39 | INFO     | Total errors: 1
+2026-03-02 15:03:25 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 15:03:25 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 15:03:25 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 15:03:25 | INFO     | === Processing V2X-PM84 ===
+2026-03-02 15:03:25 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:03:26 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:03:29 | INFO     | Successfully connected to Browserless
+2026-03-02 15:03:29 | INFO     | Navigating to FCC search page for V2X-PM84 (attempt 1/3)...
+2026-03-02 15:03:29 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:03:34 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:03:35 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:03:40 | INFO     | Clicking search for grantee: V2X-PM84
+2026-03-02 15:03:42 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:03:49 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 15:03:49 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 15:03:49 | INFO     | Found 0 records for V2X-PM84
+2026-03-02 15:03:49 | INFO     | Disconnected from Browserless
+2026-03-02 15:03:49 | ERROR    | Browserless crawl failed for V2X-PM84: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 15:03:49 | INFO     | === Crawl Complete ===
+2026-03-02 15:03:49 | INFO     | Total new records: 0
+2026-03-02 15:03:49 | INFO     | Total errors: 1
+2026-03-02 15:04:10 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 15:04:10 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 15:04:10 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 15:04:10 | INFO     | === Processing Point Mobile ===
+2026-03-02 15:04:10 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:04:11 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:04:13 | INFO     | Successfully connected to Browserless
+2026-03-02 15:04:13 | INFO     | Navigating to FCC search page for Point Mobile (attempt 1/3)...
+2026-03-02 15:04:13 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:04:18 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:04:19 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:04:25 | INFO     | Clicking search for grantee: Point Mobile
+2026-03-02 15:04:26 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:04:33 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 15:04:33 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 15:04:33 | INFO     | Found 0 records for Point Mobile
+2026-03-02 15:04:33 | INFO     | Disconnected from Browserless
+2026-03-02 15:04:33 | ERROR    | Browserless crawl failed for Point Mobile: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 15:04:33 | INFO     | === Crawl Complete ===
+2026-03-02 15:04:33 | INFO     | Total new records: 0
+2026-03-02 15:04:33 | INFO     | Total errors: 1
+2026-03-02 15:04:51 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 15:04:51 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 15:04:51 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 15:04:51 | INFO     | === Processing v2x ===
+2026-03-02 15:04:51 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:04:52 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:04:54 | INFO     | Successfully connected to Browserless
+2026-03-02 15:04:54 | INFO     | Navigating to FCC search page for v2x (attempt 1/3)...
+2026-03-02 15:04:55 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:05:00 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:05:01 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:05:04 | INFO     | Clicking search for grantee: v2x
+2026-03-02 15:05:06 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:05:12 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 15:05:12 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 15:05:12 | INFO     | Found 0 records for v2x
+2026-03-02 15:05:12 | INFO     | Disconnected from Browserless
+2026-03-02 15:05:13 | ERROR    | Browserless crawl failed for v2x: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 15:05:13 | INFO     | === Crawl Complete ===
+2026-03-02 15:05:13 | INFO     | Total new records: 0
+2026-03-02 15:05:13 | INFO     | Total errors: 1
+2026-03-02 15:32:50 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 15:32:50 | INFO     | Starting FCC Browserless crawl for 10 grantee codes
+2026-03-02 15:32:50 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 15:32:50 | INFO     | === Processing UZ7 ===
+2026-03-02 15:32:50 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:32:51 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:32:55 | INFO     | Successfully connected to Browserless
+2026-03-02 15:32:55 | INFO     | Navigating to FCC search page for UZ7 (attempt 1/3)...
+2026-03-02 15:32:55 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:33:00 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:33:01 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:33:04 | INFO     | Clicking search for grantee: UZ7
+2026-03-02 15:33:06 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:33:12 | DEBUG    | JavaScript extracted 11 records
+2026-03-02 15:33:12 | DEBUG    | Parsed record: UZ7MC27AK - 60069 - UZ7MC27AK
+2026-03-02 15:33:12 | DEBUG    | Parsed record: UZ7AP6 - Class II Permissive Change - 09/30/2011
+2026-03-02 15:33:12 | DEBUG    | Parsed record: UZ7CCHUB1 - Original Equipment - 03/18/2013
+2026-03-02 15:33:12 | DEBUG    | Parsed record: UZ7TC56CJ - Class II Permissive Change - 05/23/2018
+2026-03-02 15:33:12 | DEBUG    | Parsed record: UZ7ET51CE - Original Equipment - 06/27/2019
+2026-03-02 15:33:12 | INFO     | Parsed 5 unique records from FCC search results
+2026-03-02 15:33:12 | INFO     | Found 5 records for UZ7
+2026-03-02 15:33:12 | INFO     | Disconnected from Browserless
+2026-03-02 15:33:14 | INFO     | === Processing HD5 ===
+2026-03-02 15:33:14 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:33:15 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:33:18 | INFO     | Successfully connected to Browserless
+2026-03-02 15:33:18 | INFO     | Navigating to FCC search page for HD5 (attempt 1/3)...
+2026-03-02 15:33:18 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:33:23 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:33:24 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:33:27 | INFO     | Clicking search for grantee: HD5
+2026-03-02 15:33:29 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:33:35 | DEBUG    | JavaScript extracted 5 records
+2026-03-02 15:33:35 | DEBUG    | Parsed record: HD5BASESAWRF - 29707 - HD5BASESAWRF
+2026-03-02 15:33:35 | DEBUG    | Parsed record: HD5LWRFSAW - Original Equipment - 10/02/1995
+2026-03-02 15:33:35 | DEBUG    | Parsed record: HD5LWRFU1M24A00 - Original Equipment - 11/08/1989
+2026-03-02 15:33:35 | DEBUG    | Parsed record: HD5MW3SAWRF - Original Equipment - 12/14/1993
+2026-03-02 15:33:35 | INFO     | Parsed 4 unique records from FCC search results
+2026-03-02 15:33:35 | INFO     | Found 4 records for HD5
+2026-03-02 15:33:35 | INFO     | Disconnected from Browserless
+2026-03-02 15:33:37 | INFO     | === Processing U4F ===
+2026-03-02 15:33:37 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:33:38 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:33:41 | INFO     | Successfully connected to Browserless
+2026-03-02 15:33:41 | INFO     | Navigating to FCC search page for U4F (attempt 1/3)...
+2026-03-02 15:33:41 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:33:46 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:33:47 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:33:50 | INFO     | Clicking search for grantee: U4F
+2026-03-02 15:33:52 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:33:58 | DEBUG    | JavaScript extracted 9 records
+2026-03-02 15:33:58 | DEBUG    | Parsed record: U4FBC9620WRLCHR - Original Equipment - 12/20/2023
+2026-03-02 15:33:58 | DEBUG    | Parsed record: U4F0008 - Change in Identification - 03/30/2007
+2026-03-02 15:33:58 | DEBUG    | Parsed record: U4F0022 - Class II Permissive Change - 06/01/2022
+2026-03-02 15:33:58 | DEBUG    | Parsed record: U4FTBII - Class II Permissive Change - 06/05/2019
+2026-03-02 15:33:58 | INFO     | Parsed 4 unique records from FCC search results
+2026-03-02 15:33:58 | INFO     | Found 4 records for U4F
+2026-03-02 15:33:58 | INFO     | Disconnected from Browserless
+2026-03-02 15:34:00 | INFO     | === Processing U4G ===
+2026-03-02 15:34:00 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:34:01 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:34:03 | INFO     | Successfully connected to Browserless
+2026-03-02 15:34:03 | INFO     | Navigating to FCC search page for U4G (attempt 1/3)...
+2026-03-02 15:34:04 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:34:09 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:34:10 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:34:13 | INFO     | Clicking search for grantee: U4G
+2026-03-02 15:34:15 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:34:21 | DEBUG    | JavaScript extracted 3 records
+2026-03-02 15:34:21 | DEBUG    | Parsed record: U4GDL35US - 40012 - U4GDL35US
+2026-03-02 15:34:21 | DEBUG    | Parsed record: U4GDL36LT - Class II Permissive Change - 05/12/2025
+2026-03-02 15:34:21 | INFO     | Parsed 2 unique records from FCC search results
+2026-03-02 15:34:21 | INFO     | Found 2 records for U4G
+2026-03-02 15:34:21 | INFO     | Disconnected from Browserless
+2026-03-02 15:34:23 | INFO     | === Processing V2X ===
+2026-03-02 15:34:23 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:34:24 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:34:26 | INFO     | Successfully connected to Browserless
+2026-03-02 15:34:26 | INFO     | Navigating to FCC search page for V2X (attempt 1/3)...
+2026-03-02 15:34:27 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:34:30 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:34:31 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:34:34 | INFO     | Clicking search for grantee: V2X
+2026-03-02 15:34:36 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:34:43 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 15:34:43 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 15:34:43 | INFO     | Found 0 records for V2X
+2026-03-02 15:34:43 | INFO     | Disconnected from Browserless
+2026-03-02 15:34:43 | ERROR    | Browserless crawl failed for V2X: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 15:34:45 | INFO     | === Processing SS4 ===
+2026-03-02 15:34:45 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:34:46 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:34:48 | INFO     | Successfully connected to Browserless
+2026-03-02 15:34:48 | INFO     | Navigating to FCC search page for SS4 (attempt 1/3)...
+2026-03-02 15:34:49 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:34:53 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:34:54 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:34:57 | INFO     | Clicking search for grantee: SS4
+2026-03-02 15:34:59 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:35:05 | DEBUG    | JavaScript extracted 11 records
+2026-03-02 15:35:05 | DEBUG    | Parsed record: SS4EK430 - N/A - SS4EK430
+2026-03-02 15:35:05 | DEBUG    | Parsed record: SS4SF550 - Original Equipment - 02/29/2016
+2026-03-02 15:35:05 | INFO     | Parsed 2 unique records from FCC search results
+2026-03-02 15:35:05 | INFO     | Found 2 records for SS4
+2026-03-02 15:35:05 | INFO     | Disconnected from Browserless
+2026-03-02 15:35:07 | INFO     | === Processing HLE ===
+2026-03-02 15:35:07 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:35:08 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:35:11 | INFO     | Successfully connected to Browserless
+2026-03-02 15:35:11 | INFO     | Navigating to FCC search page for HLE (attempt 1/3)...
+2026-03-02 15:35:11 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:35:16 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:35:17 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:35:20 | INFO     | Clicking search for grantee: HLE
+2026-03-02 15:35:22 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:35:28 | DEBUG    | JavaScript extracted 11 records
+2026-03-02 15:35:28 | DEBUG    | Parsed record: HLE22UPCWAND100 - N/A - HLE22UPCWAND100
+2026-03-02 15:35:28 | DEBUG    | Parsed record: HLEPA760BTNFL - Class II Permissive Change - 07/29/2019
+2026-03-02 15:35:28 | DEBUG    | Parsed record: HLEMS652BT - Original Equipment - 04/30/2018
+2026-03-02 15:35:28 | DEBUG    | Parsed record: HLETB162BTNFL - Change in Identification - 06/24/2020
+2026-03-02 15:35:28 | INFO     | Parsed 4 unique records from FCC search results
+2026-03-02 15:35:28 | INFO     | Found 4 records for HLE
+2026-03-02 15:35:28 | INFO     | Disconnected from Browserless
+2026-03-02 15:35:30 | INFO     | === Processing 2AOJL ===
+2026-03-02 15:35:30 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:35:31 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:35:33 | INFO     | Successfully connected to Browserless
+2026-03-02 15:35:33 | INFO     | Navigating to FCC search page for 2AOJL (attempt 1/3)...
+2026-03-02 15:35:34 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:35:38 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:35:39 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:35:43 | INFO     | Clicking search for grantee: 2AOJL
+2026-03-02 15:35:45 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:35:51 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 15:35:51 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 15:35:51 | INFO     | Found 0 records for 2AOJL
+2026-03-02 15:35:51 | INFO     | Disconnected from Browserless
+2026-03-02 15:35:51 | ERROR    | Browserless crawl failed for 2AOJL: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 15:35:53 | INFO     | === Processing 2AC6A ===
+2026-03-02 15:35:53 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:35:54 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:35:57 | INFO     | Successfully connected to Browserless
+2026-03-02 15:35:57 | INFO     | Navigating to FCC search page for 2AC6A (attempt 1/3)...
+2026-03-02 15:35:57 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:36:02 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:36:03 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:36:07 | INFO     | Clicking search for grantee: 2AC6A
+2026-03-02 15:36:10 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:36:16 | DEBUG    | JavaScript extracted 11 records
+2026-03-02 15:36:16 | DEBUG    | Parsed record: 2AC6AC72B - N/A - 2AC6AC72B
+2026-03-02 15:36:16 | DEBUG    | Parsed record: 2AC6AURA4 - Original Equipment - 02/25/2022
+2026-03-02 15:36:16 | DEBUG    | Parsed record: 2AC6AC5N - Original Equipment - 09/08/2025
+2026-03-02 15:36:16 | DEBUG    | Parsed record: 2AC6AC60 - Original Equipment - 01/07/2021
+2026-03-02 15:36:16 | DEBUG    | Parsed record: 2AC6AMR20 - Original Equipment - 09/30/2022
+2026-03-02 15:36:16 | DEBUG    | Parsed record: 2AC6AC66W - Original Equipment - 12/22/2022
+2026-03-02 15:36:16 | INFO     | Parsed 6 unique records from FCC search results
+2026-03-02 15:36:16 | INFO     | Found 6 records for 2AC6A
+2026-03-02 15:36:17 | INFO     | Disconnected from Browserless
+2026-03-02 15:36:19 | INFO     | === Processing 2AR9L ===
+2026-03-02 15:36:19 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:36:20 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:36:22 | INFO     | Successfully connected to Browserless
+2026-03-02 15:36:22 | INFO     | Navigating to FCC search page for 2AR9L (attempt 1/3)...
+2026-03-02 15:36:22 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:36:27 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:36:28 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:36:32 | INFO     | Clicking search for grantee: 2AR9L
+2026-03-02 15:36:34 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:36:40 | DEBUG    | JavaScript extracted 3 records
+2026-03-02 15:36:40 | DEBUG    | Parsed record: 2AR9L0081 - Original Equipment - 01/09/2023
+2026-03-02 15:36:40 | INFO     | Parsed 1 unique records from FCC search results
+2026-03-02 15:36:40 | INFO     | Found 1 records for 2AR9L
+2026-03-02 15:36:40 | INFO     | Disconnected from Browserless
+2026-03-02 15:36:40 | DEBUG    | Telegram not configured, skipping notification
+2026-03-02 15:36:40 | DEBUG    | Discord not configured, skipping notification
+2026-03-02 15:36:40 | INFO     | === Crawl Complete ===
+2026-03-02 15:36:40 | INFO     | Total new records: 28
+2026-03-02 15:36:40 | INFO     | Total errors: 2
+2026-03-02 15:37:10 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 15:37:10 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 15:37:10 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 15:37:10 | INFO     | === Processing V2X ===
+2026-03-02 15:37:10 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:37:11 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:37:13 | INFO     | Successfully connected to Browserless
+2026-03-02 15:37:13 | INFO     | Navigating to FCC search page for V2X (attempt 1/3)...
+2026-03-02 15:37:14 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:37:19 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 15:37:20 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 15:37:23 | INFO     | Clicking search for grantee: V2X
+2026-03-02 15:37:25 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 15:37:31 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 15:37:31 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 15:37:31 | INFO     | Found 0 records for V2X
+2026-03-02 15:37:31 | INFO     | Disconnected from Browserless
+2026-03-02 15:37:31 | ERROR    | Browserless crawl failed for V2X: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 15:37:31 | INFO     | === Crawl Complete ===
+2026-03-02 15:37:31 | INFO     | Total new records: 0
+2026-03-02 15:37:31 | INFO     | Total errors: 1
+2026-03-02 15:51:38 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 15:51:38 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 15:51:38 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 15:51:38 | INFO     | === Processing HLE ===
+2026-03-02 15:51:38 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 15:51:39 | INFO     | Connecting to Browserless cloud...
+2026-03-02 15:51:39 | ERROR    | Failed to connect to Browserless: BrowserType.connect_over_cdp: WebSocket error: wss://production-sfo.browserless.io/stealth 401 Unauthorized
+
+Invalid API key. Please check your API key and try again.
+Call log:
+  - <ws connecting> wss://production-sfo.browserless.io/stealth
+  - <ws unexpected response> wss://production-sfo.browserless.io/stealth 401 Unauthorized
+
+Invalid API key. Please check your API key and try again.
+  - <ws error> wss://production-sfo.browserless.io/stealth error WebSocket was closed before the connection was established
+  - <ws connect error> wss://production-sfo.browserless.io/stealth WebSocket was closed before the connection was established
+  - <ws disconnected> wss://production-sfo.browserless.io/stealth code=1006 reason=
+
+2026-03-02 15:51:39 | ERROR    | Browserless crawl failed for HLE: BrowserType.connect_over_cdp: WebSocket error: wss://production-sfo.browserless.io/stealth 401 Unauthorized
+
+Invalid API key. Please check your API key and try again.
+Call log:
+  - <ws connecting> wss://production-sfo.browserless.io/stealth
+  - <ws unexpected response> wss://production-sfo.browserless.io/stealth 401 Unauthorized
+
+Invalid API key. Please check your API key and try again.
+  - <ws error> wss://production-sfo.browserless.io/stealth error WebSocket was closed before the connection was established
+  - <ws connect error> wss://production-sfo.browserless.io/stealth WebSocket was closed before the connection was established
+  - <ws disconnected> wss://production-sfo.browserless.io/stealth code=1006 reason=
+
+2026-03-02 15:51:39 | INFO     | === Crawl Complete ===
+2026-03-02 15:51:39 | INFO     | Total new records: 0
+2026-03-02 15:51:39 | INFO     | Total errors: 1
+2026-03-02 16:12:45 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 16:12:45 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 16:12:45 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 16:12:45 | INFO     | === Processing V2X ===
+2026-03-02 16:12:45 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:12:46 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:12:49 | INFO     | Successfully connected to Browserless
+2026-03-02 16:12:49 | INFO     | Navigating to FCC search page for V2X (attempt 1/3)...
+2026-03-02 16:12:49 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:12:54 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:12:55 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:12:58 | INFO     | Clicking search for grantee: V2X
+2026-03-02 16:13:00 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:13:06 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:13:06 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:13:06 | INFO     | Found 0 records for V2X
+2026-03-02 16:13:06 | INFO     | Disconnected from Browserless
+2026-03-02 16:13:06 | ERROR    | Browserless crawl failed for V2X: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:13:06 | INFO     | === Crawl Complete ===
+2026-03-02 16:13:06 | INFO     | Total new records: 0
+2026-03-02 16:13:06 | INFO     | Total errors: 1
+2026-03-02 16:13:20 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 16:13:20 | INFO     | Starting FCC Browserless crawl for 10 grantee codes
+2026-03-02 16:13:20 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 16:13:20 | INFO     | === Processing UZ7 ===
+2026-03-02 16:13:20 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:13:21 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:13:24 | INFO     | Successfully connected to Browserless
+2026-03-02 16:13:24 | INFO     | Navigating to FCC search page for UZ7 (attempt 1/3)...
+2026-03-02 16:13:24 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:13:29 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:13:30 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:13:33 | INFO     | Clicking search for grantee: UZ7
+2026-03-02 16:13:34 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:13:41 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:13:41 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:13:41 | INFO     | Found 0 records for UZ7
+2026-03-02 16:13:41 | INFO     | Disconnected from Browserless
+2026-03-02 16:13:41 | ERROR    | Browserless crawl failed for UZ7: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:13:43 | INFO     | === Processing HD5 ===
+2026-03-02 16:13:43 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:13:44 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:13:46 | INFO     | Successfully connected to Browserless
+2026-03-02 16:13:46 | INFO     | Navigating to FCC search page for HD5 (attempt 1/3)...
+2026-03-02 16:13:47 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:13:52 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:13:53 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:13:56 | INFO     | Clicking search for grantee: HD5
+2026-03-02 16:13:58 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:14:04 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:14:04 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:14:04 | INFO     | Found 0 records for HD5
+2026-03-02 16:14:04 | INFO     | Disconnected from Browserless
+2026-03-02 16:14:04 | ERROR    | Browserless crawl failed for HD5: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:14:07 | INFO     | === Processing U4F ===
+2026-03-02 16:14:07 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:14:07 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:14:10 | INFO     | Successfully connected to Browserless
+2026-03-02 16:14:10 | INFO     | Navigating to FCC search page for U4F (attempt 1/3)...
+2026-03-02 16:14:11 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:14:15 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:14:16 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:14:19 | INFO     | Clicking search for grantee: U4F
+2026-03-02 16:14:21 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:14:28 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:14:28 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:14:28 | INFO     | Found 0 records for U4F
+2026-03-02 16:14:28 | INFO     | Disconnected from Browserless
+2026-03-02 16:14:28 | ERROR    | Browserless crawl failed for U4F: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:14:30 | INFO     | === Processing U4G ===
+2026-03-02 16:14:30 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:14:31 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:14:33 | INFO     | Successfully connected to Browserless
+2026-03-02 16:14:33 | INFO     | Navigating to FCC search page for U4G (attempt 1/3)...
+2026-03-02 16:14:34 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:14:39 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:14:40 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:14:43 | INFO     | Clicking search for grantee: U4G
+2026-03-02 16:14:44 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:14:51 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:14:51 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:14:51 | INFO     | Found 0 records for U4G
+2026-03-02 16:14:51 | INFO     | Disconnected from Browserless
+2026-03-02 16:14:51 | ERROR    | Browserless crawl failed for U4G: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:14:53 | INFO     | === Processing V2X ===
+2026-03-02 16:14:53 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:14:54 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:14:56 | INFO     | Successfully connected to Browserless
+2026-03-02 16:14:56 | INFO     | Navigating to FCC search page for V2X (attempt 1/3)...
+2026-03-02 16:14:57 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:15:01 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:15:02 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:15:05 | INFO     | Clicking search for grantee: V2X
+2026-03-02 16:15:07 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:15:14 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:15:14 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:15:14 | INFO     | Found 0 records for V2X
+2026-03-02 16:15:14 | INFO     | Disconnected from Browserless
+2026-03-02 16:15:14 | ERROR    | Browserless crawl failed for V2X: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:15:16 | INFO     | === Processing SS4 ===
+2026-03-02 16:15:16 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:15:17 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:15:19 | INFO     | Successfully connected to Browserless
+2026-03-02 16:15:19 | INFO     | Navigating to FCC search page for SS4 (attempt 1/3)...
+2026-03-02 16:15:20 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:15:25 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:15:26 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:15:29 | INFO     | Clicking search for grantee: SS4
+2026-03-02 16:15:31 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:15:37 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:15:37 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:15:37 | INFO     | Found 0 records for SS4
+2026-03-02 16:15:37 | INFO     | Disconnected from Browserless
+2026-03-02 16:15:37 | ERROR    | Browserless crawl failed for SS4: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:15:39 | INFO     | === Processing HLE ===
+2026-03-02 16:15:39 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:15:40 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:15:42 | INFO     | Successfully connected to Browserless
+2026-03-02 16:15:42 | INFO     | Navigating to FCC search page for HLE (attempt 1/3)...
+2026-03-02 16:15:43 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:15:47 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:15:48 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:15:51 | INFO     | Clicking search for grantee: HLE
+2026-03-02 16:15:53 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:15:59 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:15:59 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:15:59 | INFO     | Found 0 records for HLE
+2026-03-02 16:16:00 | INFO     | Disconnected from Browserless
+2026-03-02 16:16:00 | ERROR    | Browserless crawl failed for HLE: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:16:02 | INFO     | === Processing 2AOJL ===
+2026-03-02 16:16:02 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:16:02 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:16:05 | INFO     | Successfully connected to Browserless
+2026-03-02 16:16:05 | INFO     | Navigating to FCC search page for 2AOJL (attempt 1/3)...
+2026-03-02 16:16:05 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:16:11 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:16:12 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:16:15 | INFO     | Clicking search for grantee: 2AOJL
+2026-03-02 16:16:17 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:16:24 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:16:24 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:16:24 | INFO     | Found 0 records for 2AOJL
+2026-03-02 16:16:24 | INFO     | Disconnected from Browserless
+2026-03-02 16:16:24 | ERROR    | Browserless crawl failed for 2AOJL: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:16:26 | INFO     | === Processing 2AC6A ===
+2026-03-02 16:16:26 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:16:27 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:16:29 | INFO     | Successfully connected to Browserless
+2026-03-02 16:16:29 | INFO     | Navigating to FCC search page for 2AC6A (attempt 1/3)...
+2026-03-02 16:16:30 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:16:35 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:16:36 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:16:40 | INFO     | Clicking search for grantee: 2AC6A
+2026-03-02 16:16:42 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:16:48 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:16:48 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:16:48 | INFO     | Found 0 records for 2AC6A
+2026-03-02 16:16:48 | INFO     | Disconnected from Browserless
+2026-03-02 16:16:48 | ERROR    | Browserless crawl failed for 2AC6A: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:16:50 | INFO     | === Processing 2AR9L ===
+2026-03-02 16:16:50 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:16:51 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:16:54 | INFO     | Successfully connected to Browserless
+2026-03-02 16:16:54 | INFO     | Navigating to FCC search page for 2AR9L (attempt 1/3)...
+2026-03-02 16:16:54 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:16:59 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:17:00 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:17:04 | INFO     | Clicking search for grantee: 2AR9L
+2026-03-02 16:17:05 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:17:12 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:17:12 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:17:12 | INFO     | Found 0 records for 2AR9L
+2026-03-02 16:17:12 | INFO     | Disconnected from Browserless
+2026-03-02 16:17:12 | ERROR    | Browserless crawl failed for 2AR9L: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:17:12 | INFO     | === Crawl Complete ===
+2026-03-02 16:17:12 | INFO     | Total new records: 0
+2026-03-02 16:17:12 | INFO     | Total errors: 10
+2026-03-02 16:18:52 | WARNING  | BROWSERLESS_API_KEY not set!
+2026-03-02 16:18:52 | WARNING  | Get your free API key from https://browserless.io/
+2026-03-02 16:18:52 | WARNING  | Or set BROWSERLESS_API_KEY environment variable
+2026-03-02 16:18:52 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 16:18:52 | ERROR    | BROWSERLESS_API_KEY environment variable is required!
+2026-03-02 16:18:52 | ERROR    | Get your API key from https://browserless.io/
+2026-03-02 16:45:05 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 16:45:05 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 16:45:05 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 16:45:05 | INFO     | === Processing V2X ===
+2026-03-02 16:45:05 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 16:45:06 | INFO     | Connecting to Browserless cloud...
+2026-03-02 16:45:09 | INFO     | Successfully connected to Browserless
+2026-03-02 16:45:09 | INFO     | Navigating to FCC search page for V2X (attempt 1/3)...
+2026-03-02 16:45:09 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:45:14 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 16:45:15 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 16:45:18 | INFO     | Clicking search for grantee: V2X
+2026-03-02 16:45:20 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 16:45:26 | INFO     | DEBUG - Table count: 23, Total rows: 43
+2026-03-02 16:45:26 | INFO     | DEBUG Row 0: th=0, td=5, ths=[], tds=['', 'Search|RSS |Updates |E-Filing |Initiatives |Consumers |Find People', 'Search|RSS |Updates |E-Filing |Initiatives |Consumers |Find People']...
+2026-03-02 16:45:26 | INFO     | DEBUG Row 1: th=0, td=1, ths=[], tds=['Search|RSS |Updates |E-Filing |Initiatives |Consumers |Find People']...
+2026-03-02 16:45:26 | INFO     | DEBUG Row 2: th=0, td=2, ths=[], tds=['', '']...
+2026-03-02 16:45:26 | INFO     | DEBUG Row 3: th=0, td=2, ths=[], tds=['Office of Engineering and Technology', '']...
+2026-03-02 16:45:26 | INFO     | DEBUG Row 4: th=0, td=1, ths=[], tds=['']...
+2026-03-02 16:45:26 | INFO     | DEBUG Row 5: th=0, td=3, ths=[], tds=['', 'FCC > FCC E-filing > EAS > Search', 'FCC\xa0Site\xa0Map']...
+2026-03-02 16:45:26 | INFO     | DEBUG Row 6: th=0, td=16, ths=[], tds=['OET Home Page \n\xa0\n\nFiling Options \n\nGrantee Registration\n\nModify Grantee Information\n\nReply to Grantee Name Change Correspondence\n\nTest Firm Accrediting Body Login\n\nReturn to 159 / Pay for a Grantee registration\n\n\n\xa0\n\nReports \n\nPending Application Status\n\nAuthorization Search\n\nGrantee Search\n\nPending Grantee Search\n\nTCB Search\n\nTest Firms\n\nTest Firm Accrediting Bodies\n\nEquipment Class/Rule Part List\n\n\n\xa0\n\nMiscellaneous \n\nGet FRN\n\nKnowledge Database\n\nHearing Aid Compatibility Status Reporting\n\nMeasurement Procedures', 'OET Home Page', 'OET Home Page']...
+2026-03-02 16:45:26 | INFO     | DEBUG Row 7: th=0, td=3, ths=[], tds=['OET Home Page', 'OET Home Page', 'OET Home Page']...
+2026-03-02 16:45:26 | INFO     | DEBUG Row 8: th=0, td=2, ths=[], tds=['OET Home Page', 'OET Home Page']...
+2026-03-02 16:45:26 | INFO     | DEBUG Row 9: th=0, td=1, ths=[], tds=['OET Home Page']...
+2026-03-02 16:45:27 | DEBUG    | JavaScript extracted 0 records
+2026-03-02 16:45:27 | INFO     | Parsed 0 unique records from FCC search results
+2026-03-02 16:45:27 | INFO     | Found 0 records for V2X
+2026-03-02 16:45:27 | INFO     | Disconnected from Browserless
+2026-03-02 16:45:27 | ERROR    | Browserless crawl failed for V2X: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 16:45:27 | INFO     | === Crawl Complete ===
+2026-03-02 16:45:27 | INFO     | Total new records: 0
+2026-03-02 16:45:27 | INFO     | Total errors: 1
+2026-03-02 17:44:23 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 17:44:23 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 17:44:23 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 17:44:23 | INFO     | === Processing HLE ===
+2026-03-02 17:44:23 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 17:44:24 | INFO     | Connecting to Browserless cloud...
+2026-03-02 17:44:26 | INFO     | Successfully connected to Browserless
+2026-03-02 17:44:26 | INFO     | Navigating to FCC search page for HLE (attempt 1/3)...
+2026-03-02 17:44:26 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 17:44:31 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 17:44:32 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 17:44:35 | INFO     | Clicking search for grantee: HLE
+2026-03-02 17:44:37 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 17:44:44 | INFO     | DEBUG - Found 23 tables
+2026-03-02 17:44:44 | INFO     | DEBUG Table 0: rows=3, dataRows=1, headers=['', 'search|rss |updates |e-filing |initiatives |consumers |find people', 'search|rss |updates |e-filing |initiatives |consumers |find people', '', ''], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 1: rows=2, dataRows=0, headers=['search|rss |updates |e-filing |initiatives |consumers |find people'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 2: rows=2, dataRows=0, headers=['office of engineering and technology', ''], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 3: rows=1, dataRows=1, headers=['', 'fcc > fcc e-filing > eas > search', 'fcc\xa0site\xa0map'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 4: rows=28, dataRows=13, headers=['oet home page \n\xa0\n\nfiling options \n\ngrantee registration\n\nmodify grantee information\n\nreply to grantee name change correspondence\n\ntest firm accrediting body login\n\nreturn to 159 / pay for a grantee registration\n\n\n\xa0\n\nreports \n\npending application status\n\nauthorization search\n\ngrantee search\n\npending grantee search\n\ntcb search\n\ntest firms\n\ntest firm accrediting bodies\n\nequipment class/rule part list\n\n\n\xa0\n\nmiscellaneous \n\nget frn\n\nknowledge database\n\nhearing aid compatibility status reporting\n\nmeasurement procedures', 'oet home page', 'oet home page', 'oet home page', ''], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 5: rows=3, dataRows=1, headers=['oet home page', 'oet home page', 'oet home page'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 6: rows=2, dataRows=0, headers=['oet home page', 'oet home page'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 7: rows=1, dataRows=0, headers=['oet home page'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 8: rows=2, dataRows=0, headers=[''], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 9: rows=2, dataRows=0, headers=['grantee registration\n\nmodify grantee information\n\nreply to grantee name change correspondence\n\ntest firm accrediting body login\n\nreturn to 159 / pay for a grantee registration', 'grantee registration\n\nmodify grantee information\n\nreply to grantee name change correspondence\n\ntest firm accrediting body login\n\nreturn to 159 / pay for a grantee registration'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 10: rows=1, dataRows=0, headers=['grantee registration\n\nmodify grantee information\n\nreply to grantee name change correspondence\n\ntest firm accrediting body login\n\nreturn to 159 / pay for a grantee registration'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 11: rows=2, dataRows=0, headers=[''], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 12: rows=2, dataRows=0, headers=['pending application status\n\nauthorization search\n\ngrantee search\n\npending grantee search\n\ntcb search\n\ntest firms\n\ntest firm accrediting bodies\n\nequipment class/rule part list', 'pending application status\n\nauthorization search\n\ngrantee search\n\npending grantee search\n\ntcb search\n\ntest firms\n\ntest firm accrediting bodies\n\nequipment class/rule part list'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 13: rows=1, dataRows=0, headers=['pending application status\n\nauthorization search\n\ngrantee search\n\npending grantee search\n\ntcb search\n\ntest firms\n\ntest firm accrediting bodies\n\nequipment class/rule part list'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 14: rows=2, dataRows=0, headers=[''], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 15: rows=2, dataRows=0, headers=['get frn\n\nknowledge database\n\nhearing aid compatibility status reporting\n\nmeasurement procedures', 'get frn\n\nknowledge database\n\nhearing aid compatibility status reporting\n\nmeasurement procedures'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 16: rows=1, dataRows=0, headers=['get frn\n\nknowledge database\n\nhearing aid compatibility status reporting\n\nmeasurement procedures'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 17: rows=11, dataRows=10, headers=['', 'view form', 'display\nexhibits', 'display\ngrant', 'display\ncorresp-\nondence'], fccId=True, grantDate=True
+2026-03-02 17:44:44 | INFO     | DEBUG Table 18: rows=1, dataRows=0, headers=[''], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 19: rows=1, dataRows=0, headers=[''], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 20: rows=7, dataRows=1, headers=['please use the submit inquiry link at www.fcc.gov/labhelp to send any comments or suggestions for this site'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 21: rows=4, dataRows=0, headers=['phone:', '888-call-fcc (225-5322)'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG Table 22: rows=1, dataRows=0, headers=['- privacy policy\n- web policies & notices\n- customer service standards\n- freedom of information act'], fccId=False, grantDate=False
+2026-03-02 17:44:44 | INFO     | DEBUG - Selected table index: 17 with 10 data rows
+2026-03-02 17:44:44 | ERROR    | Error parsing results: Page.evaluate: TypeError: Cannot read properties of null (reading 'toUpperCase')
+    at eval (eval at evaluate (:290:30), <anonymous>:72:54)
+    at UtilityScript.evaluate (<anonymous>:297:18)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+2026-03-02 17:44:44 | INFO     | Found 0 records for HLE
+2026-03-02 17:44:44 | INFO     | Disconnected from Browserless
+2026-03-02 17:44:44 | ERROR    | Browserless crawl failed for HLE: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 17:44:44 | INFO     | === Crawl Complete ===
+2026-03-02 17:44:44 | INFO     | Total new records: 0
+2026-03-02 17:44:44 | INFO     | Total errors: 1
+2026-03-02 17:47:03 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 17:47:03 | INFO     | Starting FCC Browserless crawl for 1 grantee codes
+2026-03-02 17:47:03 | INFO     | Browserless region: sfo, stealth: True
+2026-03-02 17:47:03 | INFO     | === Processing HLE ===
+2026-03-02 17:47:03 | INFO     | Browserless endpoint: wss://production-sfo.browserless.io/stealth?token=***
+2026-03-02 17:47:04 | INFO     | Connecting to Browserless cloud...
+2026-03-02 17:47:06 | INFO     | Successfully connected to Browserless
+2026-03-02 17:47:06 | INFO     | Navigating to FCC search page for HLE (attempt 1/3)...
+2026-03-02 17:47:07 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 17:47:11 | DEBUG    | Page title: FCC OET Authorization Search, URL: https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+2026-03-02 17:47:12 | DEBUG    | Found input with selector: input[name="grantee_code"]
+2026-03-02 17:47:15 | INFO     | Clicking search for grantee: HLE
+2026-03-02 17:47:17 | DEBUG    | Browser console: Failed to load resource: the server responded with a status of 404 ()
+2026-03-02 17:47:23 | INFO     | DEBUG - Found 23 tables
+2026-03-02 17:47:23 | INFO     | DEBUG Table 0: rows=3, dataRows=1, headers=['', 'search|rss |updates |e-filing |initiatives |consumers |find people', 'search|rss |updates |e-filing |initiatives |consumers |find people', '', ''], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 1: rows=2, dataRows=0, headers=['search|rss |updates |e-filing |initiatives |consumers |find people'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 2: rows=2, dataRows=0, headers=['office of engineering and technology', ''], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 3: rows=1, dataRows=1, headers=['', 'fcc > fcc e-filing > eas > search', 'fcc\xa0site\xa0map'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 4: rows=28, dataRows=13, headers=['oet home page \n\xa0\n\nfiling options \n\ngrantee registration\n\nmodify grantee information\n\nreply to grantee name change correspondence\n\ntest firm accrediting body login\n\nreturn to 159 / pay for a grantee registration\n\n\n\xa0\n\nreports \n\npending application status\n\nauthorization search\n\ngrantee search\n\npending grantee search\n\ntcb search\n\ntest firms\n\ntest firm accrediting bodies\n\nequipment class/rule part list\n\n\n\xa0\n\nmiscellaneous \n\nget frn\n\nknowledge database\n\nhearing aid compatibility status reporting\n\nmeasurement procedures', 'oet home page', 'oet home page', 'oet home page', ''], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 5: rows=3, dataRows=1, headers=['oet home page', 'oet home page', 'oet home page'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 6: rows=2, dataRows=0, headers=['oet home page', 'oet home page'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 7: rows=1, dataRows=0, headers=['oet home page'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 8: rows=2, dataRows=0, headers=[''], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 9: rows=2, dataRows=0, headers=['grantee registration\n\nmodify grantee information\n\nreply to grantee name change correspondence\n\ntest firm accrediting body login\n\nreturn to 159 / pay for a grantee registration', 'grantee registration\n\nmodify grantee information\n\nreply to grantee name change correspondence\n\ntest firm accrediting body login\n\nreturn to 159 / pay for a grantee registration'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 10: rows=1, dataRows=0, headers=['grantee registration\n\nmodify grantee information\n\nreply to grantee name change correspondence\n\ntest firm accrediting body login\n\nreturn to 159 / pay for a grantee registration'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 11: rows=2, dataRows=0, headers=[''], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 12: rows=2, dataRows=0, headers=['pending application status\n\nauthorization search\n\ngrantee search\n\npending grantee search\n\ntcb search\n\ntest firms\n\ntest firm accrediting bodies\n\nequipment class/rule part list', 'pending application status\n\nauthorization search\n\ngrantee search\n\npending grantee search\n\ntcb search\n\ntest firms\n\ntest firm accrediting bodies\n\nequipment class/rule part list'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 13: rows=1, dataRows=0, headers=['pending application status\n\nauthorization search\n\ngrantee search\n\npending grantee search\n\ntcb search\n\ntest firms\n\ntest firm accrediting bodies\n\nequipment class/rule part list'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 14: rows=2, dataRows=0, headers=[''], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 15: rows=2, dataRows=0, headers=['get frn\n\nknowledge database\n\nhearing aid compatibility status reporting\n\nmeasurement procedures', 'get frn\n\nknowledge database\n\nhearing aid compatibility status reporting\n\nmeasurement procedures'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 16: rows=1, dataRows=0, headers=['get frn\n\nknowledge database\n\nhearing aid compatibility status reporting\n\nmeasurement procedures'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 17: rows=11, dataRows=10, headers=['', 'view form', 'display\nexhibits', 'display\ngrant', 'display\ncorresp-\nondence'], fccId=True, grantDate=True
+2026-03-02 17:47:23 | INFO     | DEBUG Table 18: rows=1, dataRows=0, headers=[''], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 19: rows=1, dataRows=0, headers=[''], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 20: rows=7, dataRows=1, headers=['please use the submit inquiry link at www.fcc.gov/labhelp to send any comments or suggestions for this site'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 21: rows=4, dataRows=0, headers=['phone:', '888-call-fcc (225-5322)'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG Table 22: rows=1, dataRows=0, headers=['- privacy policy\n- web policies & notices\n- customer service standards\n- freedom of information act'], fccId=False, grantDate=False
+2026-03-02 17:47:23 | INFO     | DEBUG - Selected table index: 17 with 10 data rows
+2026-03-02 17:47:23 | ERROR    | Error parsing results: Page.evaluate: SyntaxError: Unexpected token '{'
+    at eval (<anonymous>)
+    at UtilityScript.evaluate (<anonymous>:290:30)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+2026-03-02 17:47:23 | INFO     | Found 0 records for HLE
+2026-03-02 17:47:23 | INFO     | Disconnected from Browserless
+2026-03-02 17:47:23 | ERROR    | Browserless crawl failed for HLE: Failed to access FCC website after 3 attempts - likely blocked
+2026-03-02 17:47:23 | INFO     | === Crawl Complete ===
+2026-03-02 17:47:23 | INFO     | Total new records: 0
+2026-03-02 17:47:23 | INFO     | Total errors: 1

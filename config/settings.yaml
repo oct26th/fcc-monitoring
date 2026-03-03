@@ -1,0 +1,51 @@
+# FCC Monitor Configuration (Updated)
+
+# Target companies to monitor (Grantee Codes)
+target_grantees:
+  - name: "Target Company 1"
+    codes: ["UZ7"]
+  - name: "Honeywell"
+    codes: ["HD5"]
+  - name: "Motorola Solutions"
+    codes: ["U4F", "U4G"]
+  - name: "Zebra Technologies"
+    codes: ["V2X", "SS4"]
+  - name: "Symbol Technologies"
+    codes: ["HLE"]
+  - name: "Generic1"
+    codes: ["2AOJL"]
+  - name: "Generic2"
+    codes: ["2AC6A"]
+  - name: "Generic3"
+    codes: ["2AR9L"]
+
+# Data source configuration
+data_source:
+  # Option 1: SpiderCloud API
+  spidercloud:
+    enabled: true
+    api_key: "${SPIDERCLOUD_API_KEY}"
+    base_url: "https://api.spidercloud.com/v1"
+
+  # Option 2: FCC EAS Direct (fallback)
+  fcc:
+    enabled: false
+
+# Notification settings
+telegram:
+  bot_token: "8536361329:AAFN2odX_gZGpn57ZmiAgQQJkAIl4TRTjZU"
+  chat_id: "77146542"
+
+# Scheduler settings
+scheduler:
+  timezone: "UTC"
+  run_time: "14:00"
+
+# Database settings
+database:
+  path: "data/fcc_monitor.db"
+
+# Logging
+logging:
+  level: "INFO"
+  file: "logs/fcc_monitor.log"

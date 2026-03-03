@@ -1,0 +1,201 @@
+2026-03-02 07:27:43 | INFO     | __main__:init_database:165 - Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 07:27:43 | INFO     | __main__:run:549 - ============================================================
+2026-03-02 07:27:43 | INFO     | __main__:run:550 - FCC Monitor - Starting crawl cycle
+2026-03-02 07:27:43 | INFO     | __main__:run:551 - ============================================================
+2026-03-02 07:27:43 | INFO     | __main__:run:557 - Processing grantee code: UZ7
+2026-03-02 07:27:43 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: UZ7
+2026-03-02 07:27:45 | ERROR    | __main__:search_by_grantee:356 - Request error for UZ7: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:45 | WARNING  | __main__:run:573 -   No records found for UZ7
+2026-03-02 07:27:46 | INFO     | __main__:run:557 - Processing grantee code: HD5
+2026-03-02 07:27:46 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HD5
+2026-03-02 07:27:46 | ERROR    | __main__:search_by_grantee:356 - Request error for HD5: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:46 | WARNING  | __main__:run:573 -   No records found for HD5
+2026-03-02 07:27:47 | INFO     | __main__:run:557 - Processing grantee code: U4F
+2026-03-02 07:27:47 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4F
+2026-03-02 07:27:47 | ERROR    | __main__:search_by_grantee:356 - Request error for U4F: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:47 | WARNING  | __main__:run:573 -   No records found for U4F
+2026-03-02 07:27:47 | INFO     | __main__:run:557 - Processing grantee code: U4G
+2026-03-02 07:27:47 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4G
+2026-03-02 07:27:48 | ERROR    | __main__:search_by_grantee:356 - Request error for U4G: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:48 | WARNING  | __main__:run:573 -   No records found for U4G
+2026-03-02 07:27:48 | INFO     | __main__:run:557 - Processing grantee code: V2X
+2026-03-02 07:27:48 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: V2X
+2026-03-02 07:27:48 | ERROR    | __main__:search_by_grantee:356 - Request error for V2X: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:48 | WARNING  | __main__:run:573 -   No records found for V2X
+2026-03-02 07:27:49 | INFO     | __main__:run:557 - Processing grantee code: SS4
+2026-03-02 07:27:49 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: SS4
+2026-03-02 07:27:49 | ERROR    | __main__:search_by_grantee:356 - Request error for SS4: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:49 | WARNING  | __main__:run:573 -   No records found for SS4
+2026-03-02 07:27:50 | INFO     | __main__:run:557 - Processing grantee code: HLE
+2026-03-02 07:27:50 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HLE
+2026-03-02 07:27:50 | ERROR    | __main__:search_by_grantee:356 - Request error for HLE: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:50 | WARNING  | __main__:run:573 -   No records found for HLE
+2026-03-02 07:27:50 | INFO     | __main__:run:557 - Processing grantee code: 2AOJL
+2026-03-02 07:27:50 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AOJL
+2026-03-02 07:27:51 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AOJL: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:51 | WARNING  | __main__:run:573 -   No records found for 2AOJL
+2026-03-02 07:27:51 | INFO     | __main__:run:557 - Processing grantee code: 2AC6A
+2026-03-02 07:27:51 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AC6A
+2026-03-02 07:27:51 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AC6A: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:51 | WARNING  | __main__:run:573 -   No records found for 2AC6A
+2026-03-02 07:27:52 | INFO     | __main__:run:557 - Processing grantee code: 2AR9L
+2026-03-02 07:27:52 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AR9L
+2026-03-02 07:27:52 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AR9L: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:52 | WARNING  | __main__:run:573 -   No records found for 2AR9L
+2026-03-02 07:27:52 | INFO     | __main__:run:595 - ============================================================
+2026-03-02 07:27:52 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: UZ7
+2026-03-02 07:27:53 | ERROR    | __main__:search_by_grantee:356 - Request error for UZ7: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:53 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HD5
+2026-03-02 07:27:53 | ERROR    | __main__:search_by_grantee:356 - Request error for HD5: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:53 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4F
+2026-03-02 07:27:53 | ERROR    | __main__:search_by_grantee:356 - Request error for U4F: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:53 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4G
+2026-03-02 07:27:54 | ERROR    | __main__:search_by_grantee:356 - Request error for U4G: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:54 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: V2X
+2026-03-02 07:27:54 | ERROR    | __main__:search_by_grantee:356 - Request error for V2X: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:54 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: SS4
+2026-03-02 07:27:54 | ERROR    | __main__:search_by_grantee:356 - Request error for SS4: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:54 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HLE
+2026-03-02 07:27:55 | ERROR    | __main__:search_by_grantee:356 - Request error for HLE: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:55 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AOJL
+2026-03-02 07:27:55 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AOJL: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:55 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AC6A
+2026-03-02 07:27:55 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AC6A: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:55 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AR9L
+2026-03-02 07:27:56 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AR9L: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 07:27:56 | INFO     | __main__:run:596 - Crawl complete. Total: 0, New: 0
+2026-03-02 07:27:56 | INFO     | __main__:run:597 - ============================================================
+2026-03-02 15:52:46 | INFO     | __main__:init_database:165 - Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-02 15:52:46 | INFO     | __main__:run:549 - ============================================================
+2026-03-02 15:52:46 | INFO     | __main__:run:550 - FCC Monitor - Starting crawl cycle
+2026-03-02 15:52:46 | INFO     | __main__:run:551 - ============================================================
+2026-03-02 15:52:46 | INFO     | __main__:run:557 - Processing grantee code: UZ7
+2026-03-02 15:52:46 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: UZ7
+2026-03-02 15:52:47 | ERROR    | __main__:search_by_grantee:356 - Request error for UZ7: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:47 | WARNING  | __main__:run:573 -   No records found for UZ7
+2026-03-02 15:52:47 | INFO     | __main__:run:557 - Processing grantee code: HD5
+2026-03-02 15:52:47 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HD5
+2026-03-02 15:52:47 | ERROR    | __main__:search_by_grantee:356 - Request error for HD5: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:47 | WARNING  | __main__:run:573 -   No records found for HD5
+2026-03-02 15:52:47 | INFO     | __main__:run:557 - Processing grantee code: U4F
+2026-03-02 15:52:47 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4F
+2026-03-02 15:52:47 | ERROR    | __main__:search_by_grantee:356 - Request error for U4F: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:47 | WARNING  | __main__:run:573 -   No records found for U4F
+2026-03-02 15:52:47 | INFO     | __main__:run:557 - Processing grantee code: U4G
+2026-03-02 15:52:47 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4G
+2026-03-02 15:52:48 | ERROR    | __main__:search_by_grantee:356 - Request error for U4G: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:48 | WARNING  | __main__:run:573 -   No records found for U4G
+2026-03-02 15:52:48 | INFO     | __main__:run:557 - Processing grantee code: V2X
+2026-03-02 15:52:48 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: V2X
+2026-03-02 15:52:48 | ERROR    | __main__:search_by_grantee:356 - Request error for V2X: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:48 | WARNING  | __main__:run:573 -   No records found for V2X
+2026-03-02 15:52:48 | INFO     | __main__:run:557 - Processing grantee code: SS4
+2026-03-02 15:52:48 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: SS4
+2026-03-02 15:52:48 | ERROR    | __main__:search_by_grantee:356 - Request error for SS4: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:48 | WARNING  | __main__:run:573 -   No records found for SS4
+2026-03-02 15:52:48 | INFO     | __main__:run:557 - Processing grantee code: HLE
+2026-03-02 15:52:48 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HLE
+2026-03-02 15:52:49 | ERROR    | __main__:search_by_grantee:356 - Request error for HLE: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:49 | WARNING  | __main__:run:573 -   No records found for HLE
+2026-03-02 15:52:49 | INFO     | __main__:run:557 - Processing grantee code: 2AOJL
+2026-03-02 15:52:49 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AOJL
+2026-03-02 15:52:49 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AOJL: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:49 | WARNING  | __main__:run:573 -   No records found for 2AOJL
+2026-03-02 15:52:49 | INFO     | __main__:run:557 - Processing grantee code: 2AC6A
+2026-03-02 15:52:49 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AC6A
+2026-03-02 15:52:49 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AC6A: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:49 | WARNING  | __main__:run:573 -   No records found for 2AC6A
+2026-03-02 15:52:49 | INFO     | __main__:run:557 - Processing grantee code: 2AR9L
+2026-03-02 15:52:49 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AR9L
+2026-03-02 15:52:49 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AR9L: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:49 | WARNING  | __main__:run:573 -   No records found for 2AR9L
+2026-03-02 15:52:49 | INFO     | __main__:run:595 - ============================================================
+2026-03-02 15:52:49 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: UZ7
+2026-03-02 15:52:50 | ERROR    | __main__:search_by_grantee:356 - Request error for UZ7: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:50 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HD5
+2026-03-02 15:52:50 | ERROR    | __main__:search_by_grantee:356 - Request error for HD5: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:50 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4F
+2026-03-02 15:52:50 | ERROR    | __main__:search_by_grantee:356 - Request error for U4F: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:50 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4G
+2026-03-02 15:52:51 | ERROR    | __main__:search_by_grantee:356 - Request error for U4G: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:51 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: V2X
+2026-03-02 15:52:51 | ERROR    | __main__:search_by_grantee:356 - Request error for V2X: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:51 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: SS4
+2026-03-02 15:52:51 | ERROR    | __main__:search_by_grantee:356 - Request error for SS4: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:51 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HLE
+2026-03-02 15:52:52 | ERROR    | __main__:search_by_grantee:356 - Request error for HLE: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:52 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AOJL
+2026-03-02 15:52:52 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AOJL: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:52 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AC6A
+2026-03-02 15:52:52 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AC6A: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:52 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AR9L
+2026-03-02 15:52:53 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AR9L: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-02 15:52:53 | INFO     | __main__:run:596 - Crawl complete. Total: 0, New: 0
+2026-03-02 15:52:53 | INFO     | __main__:run:597 - ============================================================
+2026-03-03 00:00:01 | INFO     | __main__:init_database:165 - Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-03 00:00:01 | INFO     | __main__:run:549 - ============================================================
+2026-03-03 00:00:01 | INFO     | __main__:run:550 - FCC Monitor - Starting crawl cycle
+2026-03-03 00:00:01 | INFO     | __main__:run:551 - ============================================================
+2026-03-03 00:00:01 | INFO     | __main__:run:557 - Processing grantee code: UZ7
+2026-03-03 00:00:01 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: UZ7
+2026-03-03 00:00:01 | ERROR    | __main__:search_by_grantee:356 - Request error for UZ7: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:01 | WARNING  | __main__:run:573 -   No records found for UZ7
+2026-03-03 00:00:01 | INFO     | __main__:run:557 - Processing grantee code: HD5
+2026-03-03 00:00:01 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HD5
+2026-03-03 00:00:02 | ERROR    | __main__:search_by_grantee:356 - Request error for HD5: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:02 | WARNING  | __main__:run:573 -   No records found for HD5
+2026-03-03 00:00:02 | INFO     | __main__:run:557 - Processing grantee code: U4F
+2026-03-03 00:00:02 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4F
+2026-03-03 00:00:02 | ERROR    | __main__:search_by_grantee:356 - Request error for U4F: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:02 | WARNING  | __main__:run:573 -   No records found for U4F
+2026-03-03 00:00:02 | INFO     | __main__:run:557 - Processing grantee code: U4G
+2026-03-03 00:00:02 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4G
+2026-03-03 00:00:02 | ERROR    | __main__:search_by_grantee:356 - Request error for U4G: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:02 | WARNING  | __main__:run:573 -   No records found for U4G
+2026-03-03 00:00:02 | INFO     | __main__:run:557 - Processing grantee code: V2X
+2026-03-03 00:00:02 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: V2X
+2026-03-03 00:00:03 | ERROR    | __main__:search_by_grantee:356 - Request error for V2X: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:03 | WARNING  | __main__:run:573 -   No records found for V2X
+2026-03-03 00:00:03 | INFO     | __main__:run:557 - Processing grantee code: SS4
+2026-03-03 00:00:03 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: SS4
+2026-03-03 00:00:03 | ERROR    | __main__:search_by_grantee:356 - Request error for SS4: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:03 | WARNING  | __main__:run:573 -   No records found for SS4
+2026-03-03 00:00:03 | INFO     | __main__:run:557 - Processing grantee code: HLE
+2026-03-03 00:00:03 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HLE
+2026-03-03 00:00:03 | ERROR    | __main__:search_by_grantee:356 - Request error for HLE: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:03 | WARNING  | __main__:run:573 -   No records found for HLE
+2026-03-03 00:00:03 | INFO     | __main__:run:557 - Processing grantee code: 2AOJL
+2026-03-03 00:00:03 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AOJL
+2026-03-03 00:00:03 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AOJL: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:03 | WARNING  | __main__:run:573 -   No records found for 2AOJL
+2026-03-03 00:00:03 | INFO     | __main__:run:557 - Processing grantee code: 2AC6A
+2026-03-03 00:00:03 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AC6A
+2026-03-03 00:00:04 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AC6A: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:04 | WARNING  | __main__:run:573 -   No records found for 2AC6A
+2026-03-03 00:00:04 | INFO     | __main__:run:557 - Processing grantee code: 2AR9L
+2026-03-03 00:00:04 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AR9L
+2026-03-03 00:00:04 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AR9L: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:04 | WARNING  | __main__:run:573 -   No records found for 2AR9L
+2026-03-03 00:00:04 | INFO     | __main__:run:595 - ============================================================
+2026-03-03 00:00:04 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: UZ7
+2026-03-03 00:00:04 | ERROR    | __main__:search_by_grantee:356 - Request error for UZ7: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:04 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HD5
+2026-03-03 00:00:05 | ERROR    | __main__:search_by_grantee:356 - Request error for HD5: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:05 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4F
+2026-03-03 00:00:05 | ERROR    | __main__:search_by_grantee:356 - Request error for U4F: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:05 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: U4G
+2026-03-03 00:00:05 | ERROR    | __main__:search_by_grantee:356 - Request error for U4G: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:05 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: V2X
+2026-03-03 00:00:06 | ERROR    | __main__:search_by_grantee:356 - Request error for V2X: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:06 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: SS4
+2026-03-03 00:00:06 | ERROR    | __main__:search_by_grantee:356 - Request error for SS4: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:06 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: HLE
+2026-03-03 00:00:06 | ERROR    | __main__:search_by_grantee:356 - Request error for HLE: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:06 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AOJL
+2026-03-03 00:00:07 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AOJL: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:07 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AC6A
+2026-03-03 00:00:07 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AC6A: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:07 | INFO     | __main__:search_by_grantee:343 - Fetching FCC data for grantee: 2AR9L
+2026-03-03 00:00:07 | ERROR    | __main__:search_by_grantee:356 - Request error for 2AR9L: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:07 | INFO     | __main__:run:596 - Crawl complete. Total: 0, New: 0
+2026-03-03 00:00:07 | INFO     | __main__:run:597 - ============================================================

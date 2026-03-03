@@ -1,0 +1,67 @@
+2026-03-03 00:00:01 | INFO     | Database initialized at /home/node/.openclaw/workspace-shinji/fcc-monitor/data/fcc_monitor.db
+2026-03-03 00:00:01 | INFO     | ============================================================
+2026-03-03 00:00:01 | INFO     | FCC Monitor - Starting crawl cycle
+2026-03-03 00:00:01 | INFO     | ============================================================
+2026-03-03 00:00:01 | INFO     | Processing grantee code: UZ7
+2026-03-03 00:00:01 | INFO     | Fetching FCC data for grantee: UZ7
+2026-03-03 00:00:01 | ERROR    | Request error for UZ7: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:01 | WARNING  |   No records found for UZ7
+2026-03-03 00:00:01 | INFO     | Processing grantee code: HD5
+2026-03-03 00:00:01 | INFO     | Fetching FCC data for grantee: HD5
+2026-03-03 00:00:02 | ERROR    | Request error for HD5: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:02 | WARNING  |   No records found for HD5
+2026-03-03 00:00:02 | INFO     | Processing grantee code: U4F
+2026-03-03 00:00:02 | INFO     | Fetching FCC data for grantee: U4F
+2026-03-03 00:00:02 | ERROR    | Request error for U4F: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:02 | WARNING  |   No records found for U4F
+2026-03-03 00:00:02 | INFO     | Processing grantee code: U4G
+2026-03-03 00:00:02 | INFO     | Fetching FCC data for grantee: U4G
+2026-03-03 00:00:02 | ERROR    | Request error for U4G: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:02 | WARNING  |   No records found for U4G
+2026-03-03 00:00:02 | INFO     | Processing grantee code: V2X
+2026-03-03 00:00:02 | INFO     | Fetching FCC data for grantee: V2X
+2026-03-03 00:00:03 | ERROR    | Request error for V2X: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:03 | WARNING  |   No records found for V2X
+2026-03-03 00:00:03 | INFO     | Processing grantee code: SS4
+2026-03-03 00:00:03 | INFO     | Fetching FCC data for grantee: SS4
+2026-03-03 00:00:03 | ERROR    | Request error for SS4: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:03 | WARNING  |   No records found for SS4
+2026-03-03 00:00:03 | INFO     | Processing grantee code: HLE
+2026-03-03 00:00:03 | INFO     | Fetching FCC data for grantee: HLE
+2026-03-03 00:00:03 | ERROR    | Request error for HLE: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:03 | WARNING  |   No records found for HLE
+2026-03-03 00:00:03 | INFO     | Processing grantee code: 2AOJL
+2026-03-03 00:00:03 | INFO     | Fetching FCC data for grantee: 2AOJL
+2026-03-03 00:00:03 | ERROR    | Request error for 2AOJL: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:03 | WARNING  |   No records found for 2AOJL
+2026-03-03 00:00:03 | INFO     | Processing grantee code: 2AC6A
+2026-03-03 00:00:03 | INFO     | Fetching FCC data for grantee: 2AC6A
+2026-03-03 00:00:04 | ERROR    | Request error for 2AC6A: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:04 | WARNING  |   No records found for 2AC6A
+2026-03-03 00:00:04 | INFO     | Processing grantee code: 2AR9L
+2026-03-03 00:00:04 | INFO     | Fetching FCC data for grantee: 2AR9L
+2026-03-03 00:00:04 | ERROR    | Request error for 2AR9L: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:04 | WARNING  |   No records found for 2AR9L
+2026-03-03 00:00:04 | INFO     | ============================================================
+2026-03-03 00:00:04 | INFO     | Fetching FCC data for grantee: UZ7
+2026-03-03 00:00:04 | ERROR    | Request error for UZ7: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:04 | INFO     | Fetching FCC data for grantee: HD5
+2026-03-03 00:00:05 | ERROR    | Request error for HD5: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:05 | INFO     | Fetching FCC data for grantee: U4F
+2026-03-03 00:00:05 | ERROR    | Request error for U4F: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:05 | INFO     | Fetching FCC data for grantee: U4G
+2026-03-03 00:00:05 | ERROR    | Request error for U4G: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:05 | INFO     | Fetching FCC data for grantee: V2X
+2026-03-03 00:00:06 | ERROR    | Request error for V2X: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:06 | INFO     | Fetching FCC data for grantee: SS4
+2026-03-03 00:00:06 | ERROR    | Request error for SS4: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:06 | INFO     | Fetching FCC data for grantee: HLE
+2026-03-03 00:00:06 | ERROR    | Request error for HLE: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:06 | INFO     | Fetching FCC data for grantee: 2AOJL
+2026-03-03 00:00:07 | ERROR    | Request error for 2AOJL: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:07 | INFO     | Fetching FCC data for grantee: 2AC6A
+2026-03-03 00:00:07 | ERROR    | Request error for 2AC6A: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:07 | INFO     | Fetching FCC data for grantee: 2AR9L
+2026-03-03 00:00:07 | ERROR    | Request error for 2AR9L: TLS/SSL connection has been closed (EOF) (_ssl.c:992)
+2026-03-03 00:00:07 | INFO     | Crawl complete. Total: 0, New: 0
+2026-03-03 00:00:07 | INFO     | ============================================================
