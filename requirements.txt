@@ -7,7 +7,7 @@ pyyaml>=6.0
 sqlalchemy>=2.0
 pydantic>=2.0
 structlog>=24.0
-loguru>=0.7
+# loguru>=0.7 (Removed to reduce dependencies)
 python-dotenv>=1.0
 
 # Browser automation
