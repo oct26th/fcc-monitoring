@@ -29,7 +29,7 @@ from dataclasses import dataclass, asdict, field
 from datetime import datetime, date
 from pathlib import Path
 from html.parser import HTMLParser
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 import sqlite3
 from loguru import logger
@@ -598,7 +598,7 @@ class FCCBrowserlessCrawler:
             
         return records
     
-    async def _parse_results(self, grantee_code: str) -> list[FCCRecord]:
+    async def _parse_results(self, grantee_code: str) -> List[FCCRecord]:
         """Parse the results table from the FCC search results page."""
         records = []
         
@@ -606,101 +606,88 @@ class FCCBrowserlessCrawler:
             # Wait for results to fully load
             await asyncio.sleep(2)
             
-            # DEBUG: Find the actual data table by looking for specific headers
-            # Skip navigation/menu tables - look for tables with FCC ID, Grant Date, etc.
-            debug_info = await self.page.evaluate('''() => {
+            # Analyze tables and extract data in one JS call for efficiency
+            # This is specifically optimized for Browserless.io
+            data = await self.page.evaluate('''() => {
                 const tables = document.querySelectorAll('table');
-                const result = {
-                    tableCount: tables.length,
-                    tablesAnalyzed: [],
-                    selectedTableIndex: -1,
-                    totalDataRows: 0
-                };
-                
-                // Analyze each table to find the one with actual search results
                 let dataTableIndex = -1;
                 let maxDataRows = 0;
+                let selectedHeaders = [];
                 
+                // 1. Identify the search results table
                 tables.forEach((table, idx) => {
                     const rows = table.querySelectorAll('tr');
-                    const rowCount = rows.length;
-                    
-                    // Get header cells to check for FCC-related columns
                     const headerRow = rows[0];
                     const headers = headerRow ? Array.from(headerRow.querySelectorAll('th, td')).map(h => h.innerText.trim().toLowerCase()) : [];
                     const headerText = headers.join(' ');
                     
-                    // Check if this looks like a data table (has relevant headers or many rows)
+                    // Check for FCC-specific headers
                     const hasFCCIdHeader = headerText.includes('fcc') && headerText.includes('id');
                     const hasGrantDateHeader = headerText.includes('grant') && headerText.includes('date');
-                    const hasApplicantHeader = headerText.includes('applicant') || headerText.includes('name');
                     
-                    // Count data rows (rows with td elements)
                     let dataRowCount = 0;
                     rows.forEach(row => {
                         const cells = row.querySelectorAll('td');
                         if (cells.length >= 3) dataRowCount++;
                     });
                     
-                    result.tablesAnalyzed.push({
-                        index: idx,
-                        rowCount: rowCount,
-                        dataRowCount: dataRowCount,
-                        headers: headers.slice(0, 10),
-                        hasFCCIdHeader: hasFCCIdHeader,
-                        hasGrantDateHeader: hasGrantDateHeader,
-                        hasApplicantHeader: hasApplicantHeader
-                    });
-                    
-                    // Select this table if it has data rows and looks like a results table
-                    // Prioritize tables with FCC ID or Grant Date headers
                     if (dataRowCount > 0) {
                         if (hasFCCIdHeader || hasGrantDateHeader) {
-                            // This is likely the results table - high priority
                             if (dataRowCount > maxDataRows || dataTableIndex === -1) {
                                 dataTableIndex = idx;
                                 maxDataRows = dataRowCount;
+                                selectedHeaders = headers;
                             }
                         } else if (dataRowCount > maxDataRows && dataTableIndex === -1) {
-                            // Fallback: take the table with most data rows
                             dataTableIndex = idx;
                             maxDataRows = dataRowCount;
+                            selectedHeaders = headers;
                         }
                     }
                 });
                 
-                result.selectedTableIndex = dataTableIndex;
-                result.totalDataRows = maxDataRows;
+                if (dataTableIndex === -1) return { records: [], tableIndex: -1 };
                 
-                return result;
+                // 2. Map headers to fields
+                const colMap = {};
+                selectedHeaders.forEach((h, i) => {
+                    if (h.includes('fcc') && h.includes('id')) colMap.fcc_id = i;
+                    else if (h.includes('grant') && h.includes('date')) colMap.grant_date = i;
+                    else if (h.includes('filing') && h.includes('date')) colMap.filing_date = i;
+                    else if (h.includes('applicant') || h.includes('name')) colMap.applicant = i;
+                    else if (h.includes('product') || h.includes('description')) colMap.product_desc = i;
+                    else if (h.includes('type')) colMap.app_type = i;
+                    else if (h.includes('city')) colMap.city = i;
+                    else if (h.includes('state')) colMap.state = i;
+                });
+                
+                // 3. Extract data rows
+                const rows = tables[dataTableIndex].querySelectorAll('tr');
+                const extractedRecords = [];
+                
+                // Skip header row
+                for (let i = 1; i < rows.length; i++) {
+                    const cells = rows[i].querySelectorAll('td');
+                    if (cells.length < 3) continue;
+                    
+                    const record = {};
+                    for (const [key, idx] of Object.entries(colMap)) {
+                        if (idx < cells.length) {
+                            record[key] = cells[idx].innerText.trim();
+                        }
+                    }
+                    
+                    if (record.fcc_id) {
+                        extractedRecords.push(record);
+                    }
+                }
+                
+                return {
+                    records: extractedRecords,
+                    tableIndex: dataTableIndex,
+                    headers: selectedHeaders
+                };
             }''')
-            
-            logger.info(f"DEBUG - Found {debug_info['tableCount']} tables")
-            for t in debug_info['tablesAnalyzed']:
-                logger.info(f"DEBUG Table {t['index']}: rows={t['rowCount']}, dataRows={t['dataRowCount']}, headers={t['headers'][:5]}, fccId={t['hasFCCIdHeader']}, grantDate={t['hasGrantDateHeader']}")
-            logger.info(f"DEBUG - Selected table index: {debug_info['selectedTableIndex']} with {debug_info['totalDataRows']} data rows")
-            
-            if debug_info['selectedTableIndex'] < 0:
-                logger.warning("No data table found - search may have returned no results")
-                return records
-            
-            # Use JavaScript to find the correct table and extract data from ONLY that table
-            # Skip navigation tables - target the data table with FCC ID/Grant Date headers
-            # Simpler parsing - just get the table HTML
-            html = await self.page.content()
-            # Parse manually using BeautifulSoup
-            from html.parser import HTMLParser
-            parser = TableParser()
-            
-            # Find tables with FCC ID in headers
-            tables = parser.tables
-            for idx, table in enumerate(tables):
-                headers = [th.get_text(strip=True).lower() for th in table.find_all('th')]
-                header_text = ' '.join(headers)
-                if 'fcc' in header_text and 'id' in header_text:
-                    print(f'Found data table at index {idx}')
-                    # Parse rows here
-                    break
             
             logger.info(f"Parsed {len(data.get('records', []))} records from table {data.get('tableIndex', -1)}")
             
@@ -713,27 +700,23 @@ class FCCBrowserlessCrawler:
                 if not fcc_id:
                     continue
                 
-                # Skip if application_type looks like an FCC ID (parsing error)
-                # Use case-insensitive comparison
-                if app_type and app_type.upper().startswith(grantee_code.upper()):
-                    logger.debug(f"Skipping record with invalid app_type: {fcc_id}")
+                # Fingerprint check to avoid duplicates in the same page
+                fingerprint = f"{fcc_id}:{app_type}"
+                if fingerprint in seen_ids:
                     continue
-                
-                if fcc_id in seen_ids:
-                    continue
-                seen_ids.add(fcc_id)
+                seen_ids.add(fingerprint)
                 
                 # Extract product code from FCC ID
                 product_code = ""
                 if len(fcc_id) > len(grantee_code):
                     product_code = fcc_id[len(grantee_code):]
                 
-                # Build applicant name with location
+                # Build applicant name with location if available
                 applicant = item.get('applicant', '')
                 city = item.get('city', '')
                 state = item.get('state', '')
                 applicant_name = applicant
-                if city and state:
+                if city and state and city not in applicant:
                     applicant_name = f"{applicant} ({city}, {state})"
                 
                 record = FCCRecord(
@@ -741,7 +724,7 @@ class FCCBrowserlessCrawler:
                     grantee_code=grantee_code,
                     product_code=product_code,
                     applicant_name=applicant_name,
-                    product_description="",
+                    product_description=item.get('product_desc', ""),
                     grant_date=item.get('grant_date', ''),
                     filing_date=item.get('filing_date', ''),
                     application_type=item.get('app_type', ''),
@@ -751,7 +734,9 @@ class FCCBrowserlessCrawler:
                 logger.debug(f"Parsed record: {fcc_id} - {record.application_type} - {record.grant_date}")
             
             logger.info(f"Parsed {len(records)} unique records from FCC search results")
-                    
+            # Wait for results to fully load
+            await asyncio.sleep(2)
+            
         except Exception as e:
             logger.error(f"Error parsing results: {e}")
             import traceback
