@@ -6,7 +6,7 @@ from functools import lru_cache
 
 import yaml
 from pydantic import BaseModel
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 # Project root
@@ -20,6 +20,20 @@ class SpiderCloudConfig(BaseModel):
     base_url: str = "https://api.spidercloud.com/v1"
 
 
+class BrowserlessConfig(BaseSettings):
+    """Browserless API configuration."""
+    api_key: str = ""
+    region: str = "sfo"
+
+    model_config = SettingsConfigDict(env_prefix="BROWSERLESS_")
+
+
+class PlaywrightConfig(BaseModel):
+    """Playwright configuration."""
+    browser: str = "chromium"
+    headless: bool = True
+
+
 class FCCConfig(BaseModel):
     """FCC Direct API configuration."""
     enabled: bool = False
@@ -30,13 +44,24 @@ class DataSourceConfig(BaseModel):
     """Data source configuration."""
     spidercloud: SpiderCloudConfig = SpiderCloudConfig()
     fcc: FCCConfig = FCCConfig()
+    browserless: BrowserlessConfig = BrowserlessConfig()
+    playwright: PlaywrightConfig = PlaywrightConfig()
 
 
-class TelegramConfig(BaseModel):
+class TelegramConfig(BaseSettings):
     """Telegram notification configuration."""
     bot_token: str = ""
     chat_id: str = ""
     alert_chat_id: Optional[str] = None
+
+    model_config = SettingsConfigDict(env_prefix="TELEGRAM_")
+
+
+class DiscordConfig(BaseSettings):
+    """Discord notification configuration."""
+    webhook_url: str = ""
+
+    model_config = SettingsConfigDict(env_prefix="DISCORD_")
 
 
 class SchedulerConfig(BaseModel):
@@ -67,6 +92,7 @@ class Settings(BaseSettings):
     target_grantees: list[TargetGrantee] = []
     data_source: DataSourceConfig = DataSourceConfig()
     telegram: TelegramConfig = TelegramConfig()
+    discord: DiscordConfig = DiscordConfig()
     scheduler: SchedulerConfig = SchedulerConfig()
     database: DatabaseConfig = DatabaseConfig()
     logging: LoggingConfig = LoggingConfig()
