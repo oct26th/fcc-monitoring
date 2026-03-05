@@ -2,7 +2,7 @@
 
 # Target companies to monitor (Grantee Codes)
 target_grantees:
-  - name: "Target Company 1"
+  - name: "CipherLab"
     codes: ["UZ7"]
   - name: "Honeywell"
     codes: ["HD5"]
@@ -12,11 +12,11 @@ target_grantees:
     codes: ["V2X", "SS4"]
   - name: "Symbol Technologies"
     codes: ["HLE"]
-  - name: "Generic1"
+  - name: "Unitech"
     codes: ["2AOJL"]
-  - name: "Generic2"
+  - name: "iData"
     codes: ["2AC6A"]
-  - name: "Generic3"
+  - name: "Newland"
     codes: ["2AR9L"]
 
 # Data source configuration
@@ -39,8 +39,8 @@ data_source:
 
 # Notification settings
 telegram:
-  bot_token: "8536361329:AAFN2odX_gZGpn57ZmiAgQQJkAIl4TRTjZU"
-  chat_id: "77146542"
+  bot_token: "${TELEGRAM_BOT_TOKEN}"
+  chat_id: "${TELEGRAM_CHAT_ID}"
 
 # Scheduler settings
 scheduler:

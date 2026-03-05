@@ -12,7 +12,6 @@ from loguru import logger
 
 from .models import FCCRecord
 
-
 _CREATE_TABLE = """
 CREATE TABLE IF NOT EXISTS fcc_records (
     fcc_id              TEXT PRIMARY KEY,

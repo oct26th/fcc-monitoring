@@ -1,12 +1,11 @@
 """Notification management for FCC Monitor."""
 import json
-import logging
 from typing import List, Optional
 from urllib import request, parse
 
-from .models import FCCRecord
+from loguru import logger
 
-logger = logging.getLogger("fcc_monitor.notifier")
+from .models import FCCRecord
 
 class Notifier:
     """Sends notifications via Telegram and Discord."""
@@ -86,11 +85,17 @@ class Notifier:
         brand_map = {
             "Datalogic S.r.l.": "Datalogic",
             "Unitech Electronics Co., Ltd.": "Unitech",
-            "Honeywell International Inc.": "Honeywell", 
+            "Honeywell International Inc": "Honeywell",
+            "Honeywell International Inc.": "Honeywell",
             "Zebra Technologies Corporation": "Zebra",
-            "Point Mobile Co., LTD.": "Point Mobile"
+            "Symbol Technologies Inc": "Symbol",
+            "Motorola Solutions, Inc.": "Motorola",
+            "CipherLab Co., Ltd.": "CipherLab",
+            "Honeywell Safety and Productivity Solutions": "Honeywell",
+            "CipherLab Co Ltd": "CipherLab",
+            "Point Mobile Co., LTD.": "Point Mobile",
         }
-        
+
         # Build the message grouped by brand
         for code, records in grouped.items():
             # Get clean brand name from first record

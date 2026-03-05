@@ -5,12 +5,16 @@ from typing import Optional
 from functools import lru_cache
 
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent
+
+# Load .env from project root
+load_dotenv(PROJECT_ROOT / ".env")
 
 
 class SpiderCloudConfig(BaseModel):
