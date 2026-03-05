@@ -67,24 +67,39 @@ class Notifier:
         return False
 
     def notify_new_records(self, new_records: List[FCCRecord]):
-        """Format and send notification for new FCC records."""
+        """Format and send notification for new FCC records, grouped by applicant."""
         if not new_records:
             return
             
         count = len(new_records)
-        msg = f"📡 <b>NERV FCC Monitor - 新型號授權回報</b>\n\n抓取到 {count} 筆新紀錄：\n\n"
+        msg = f"📡 <b>NERV FCC Monitor - 新型號授權回報</b>\n"
+        msg += f"偵測到 {count} 筆新紀錄，摘要如下：\n\n"
         
-        # List up to 10 records in detail
-        for r in new_records[:10]:
-            # Use product description if available, otherwise just ID
-            desc = r.product_description if r.product_description else "No description"
-            # Format: ID (Desc) - Date
-            msg += f"• <code>{r.fcc_id}</code>\n"
-            msg += f"  <b>{desc[:50]}</b>\n"
-            msg += f"  📅 {r.grant_date} | 🏢 {r.applicant_name[:30]}\n\n"
+        # Group records by applicant name (cleaned)
+        grouped: dict[str, List[FCCRecord]] = {}
+        for r in new_records:
+            # Simple cleaning of applicant name for header
+            name = r.applicant_name.split('(')[0].strip()
+            if name not in grouped:
+                grouped[name] = []
+            grouped[name].append(r)
             
-        if count > 10:
-            msg += f"... 以及另外 {count - 10} 筆新紀錄。"
+        # Build the message grouped by applicant
+        for name, records in grouped.items():
+            msg += f"<b>[{name}]</b>\n"
+            for r in records[:15]: # Show up to 15 per brand
+                # Concise format: - ID (Type) - Date
+                desc = r.product_description if r.product_description else r.application_type
+                if not desc: desc = "New Filing"
+                
+                # Truncate description if too long
+                short_desc = (desc[:25] + '..') if len(desc) > 25 else desc
+                
+                msg += f"• <code>{r.fcc_id}</code> ({short_desc}) - {r.grant_date}\n"
+            msg += "\n"
+            
+        if count > 20:
+            msg += f"<i>... 共計 {count} 筆新機情報已入庫。</i>"
             
         self.send_telegram(msg)
         self.send_discord(msg)
