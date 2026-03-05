@@ -99,7 +99,7 @@ class Notifier:
                 if len(type_info) > 30:
                     type_info = type_info[:27] + ".."
                 
-                msg += f"- <code>{r.fcc_id}</code> ({type_info}) - {r.grant_date}\n"
+                msg += f"- {r.fcc_id} ({type_info}) - {r.grant_date}\n"
             msg += "\n"
             
         if count > 20:
