@@ -87,12 +87,11 @@ class Notifier:
         for code, records in grouped.items():
             # Get clean brand name from first record
             brand_name = records[0].applicant_name.split('(')[0].strip()
-            # Final preferred format: 📱 CODE (Brand Name)
+            # Ultimate format: 📱 CODE (Brand Name)
             msg += f"📱 <b>{code} ({brand_name})</b>\n"
             
             for r in records[:20]: # Show up to 20 per brand
-                # Use application type or description for the parentheses part
-                # The user specifically mentioned (Application Type)
+                # Use application type or description
                 type_info = r.application_type if r.application_type else r.product_description
                 if not type_info: type_info = "New Filing"
                 
@@ -100,7 +99,14 @@ class Notifier:
                 if len(type_info) > 30:
                     type_info = type_info[:27] + ".."
                 
-                msg += f"- {r.fcc_id} ({type_info}) - {r.grant_date}\n"
+                # Try to normalize date to YYYY/MM/DD if it's MM/DD/YYYY
+                date_str = r.grant_date
+                if '/' in date_str and len(date_str) == 10:
+                    parts = date_str.split('/')
+                    if len(parts[2]) == 4: # MM/DD/YYYY -> YYYY/MM/DD
+                        date_str = f"{parts[2]}/{parts[0]}/{parts[1]}"
+                
+                msg += f"- {r.fcc_id} ({type_info}) - {date_str}\n"
             msg += "\n"
             
         if count > 20:
