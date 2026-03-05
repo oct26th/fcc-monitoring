@@ -87,7 +87,8 @@ class Notifier:
         for code, records in grouped.items():
             # Get clean brand name from first record
             brand_name = records[0].applicant_name.split('(')[0].strip()
-            msg += f"🏢 <b>{brand_name} ({code})</b>\n"
+            # Final preferred format: 📱 CODE (Brand Name)
+            msg += f"📱 <b>{code} ({brand_name})</b>\n"
             
             for r in records[:20]: # Show up to 20 per brand
                 # Use application type or description for the parentheses part
