@@ -42,8 +42,14 @@ def run_monitor(strategy: str = "spidercloud", notify: bool = True):
     """Main monitor execution logic."""
     settings = get_settings()
     db = DatabaseManager(settings.database.path)
+    
+    # Flexible token lookup for telegram
+    tg_token = settings.telegram.bot_token or settings.telegram.token
+    if not tg_token and hasattr(settings.telegram, 'bot') and isinstance(settings.telegram.bot, dict):
+        tg_token = settings.telegram.bot.get('token', '')
+    
     notifier = Notifier(
-        telegram_token=settings.telegram.bot_token,
+        telegram_token=tg_token,
         telegram_chat_id=settings.telegram.chat_id,
         discord_webhook=settings.discord.webhook_url
     )

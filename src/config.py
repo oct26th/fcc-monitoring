@@ -51,17 +51,18 @@ class DataSourceConfig(BaseModel):
 class TelegramConfig(BaseSettings):
     """Telegram notification configuration."""
     bot_token: str = ""
+    token: str = ""  # For nested structures like telegram.bot.token
     chat_id: str = ""
     alert_chat_id: Optional[str] = None
 
-    model_config = SettingsConfigDict(env_prefix="TELEGRAM_")
+    model_config = SettingsConfigDict(env_prefix="TELEGRAM_", extra="allow")
 
 
 class DiscordConfig(BaseSettings):
     """Discord notification configuration."""
     webhook_url: str = ""
 
-    model_config = SettingsConfigDict(env_prefix="DISCORD_")
+    model_config = SettingsConfigDict(env_prefix="DISCORD_", extra="allow")
 
 
 class SchedulerConfig(BaseModel):
@@ -97,9 +98,11 @@ class Settings(BaseSettings):
     database: DatabaseConfig = DatabaseConfig()
     logging: LoggingConfig = LoggingConfig()
 
-    class Config:
-        env_prefix = ""
-        env_nested_delimiter = "_"
+    model_config = SettingsConfigDict(
+        env_prefix="",
+        env_nested_delimiter="_",
+        extra="allow"
+    )
 
 
 @lru_cache()
