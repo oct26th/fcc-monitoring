@@ -67,7 +67,7 @@ class Notifier:
         return False
 
     def notify_new_records(self, new_records: List[FCCRecord]):
-        """Format and send notification for new FCC records, grouped by applicant."""
+        """Format and send notification for new FCC records, grouped by grantee."""
         if not new_records:
             return
             
@@ -75,31 +75,35 @@ class Notifier:
         msg = f"📡 <b>NERV FCC Monitor - 新型號授權回報</b>\n"
         msg += f"偵測到 {count} 筆新紀錄，摘要如下：\n\n"
         
-        # Group records by applicant name (cleaned)
+        # Group records by grantee code
         grouped: dict[str, List[FCCRecord]] = {}
         for r in new_records:
-            # Simple cleaning of applicant name for header
-            name = r.applicant_name.split('(')[0].strip()
-            if name not in grouped:
-                grouped[name] = []
-            grouped[name].append(r)
+            code = r.grantee_code
+            if code not in grouped:
+                grouped[code] = []
+            grouped[code].append(r)
             
-        # Build the message grouped by applicant
-        for name, records in grouped.items():
-            msg += f"<b>[{name}]</b>\n"
-            for r in records[:15]: # Show up to 15 per brand
-                # Concise format: - ID (Type) - Date
-                desc = r.product_description if r.product_description else r.application_type
-                if not desc: desc = "New Filing"
+        # Build the message grouped by brand
+        for code, records in grouped.items():
+            # Get clean brand name from first record
+            brand_name = records[0].applicant_name.split('(')[0].strip()
+            msg += f"📱 <b>{brand_name} ({code})</b>\n"
+            
+            for r in records[:20]: # Show up to 20 per brand
+                # Use application type or description for the parentheses part
+                # The user specifically mentioned (Application Type)
+                type_info = r.application_type if r.application_type else r.product_description
+                if not type_info: type_info = "New Filing"
                 
-                # Truncate description if too long
-                short_desc = (desc[:25] + '..') if len(desc) > 25 else desc
+                # Truncate if too long
+                if len(type_info) > 30:
+                    type_info = type_info[:27] + ".."
                 
-                msg += f"• <code>{r.fcc_id}</code> ({short_desc}) - {r.grant_date}\n"
+                msg += f"- <code>{r.fcc_id}</code> ({type_info}) - {r.grant_date}\n"
             msg += "\n"
             
         if count > 20:
-            msg += f"<i>... 共計 {count} 筆新機情報已入庫。</i>"
+            msg += f"<i>... 總計 {count} 筆新機情報已入庫。</i>"
             
         self.send_telegram(msg)
         self.send_discord(msg)
