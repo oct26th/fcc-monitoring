@@ -72,14 +72,19 @@ class Notifier:
             return
             
         count = len(new_records)
-        msg = f"📡 <b>NERV FCC Monitor - 新型號授權回報</b>\n\n抓取到 {count} 筆新紀錄：\n"
+        msg = f"📡 <b>NERV FCC Monitor - 新型號授權回報</b>\n\n抓取到 {count} 筆新紀錄：\n\n"
         
         # List up to 10 records in detail
         for r in new_records[:10]:
-            msg += f"• <code>{r.fcc_id}</code>: {r.applicant_name[:40]}\n"
+            # Use product description if available, otherwise just ID
+            desc = r.product_description if r.product_description else "No description"
+            # Format: ID (Desc) - Date
+            msg += f"• <code>{r.fcc_id}</code>\n"
+            msg += f"  <b>{desc[:50]}</b>\n"
+            msg += f"  📅 {r.grant_date} | 🏢 {r.applicant_name[:30]}\n\n"
             
         if count > 10:
-            msg += f"\n... 以及另外 {count - 10} 筆新紀錄。"
+            msg += f"... 以及另外 {count - 10} 筆新紀錄。"
             
         self.send_telegram(msg)
         self.send_discord(msg)

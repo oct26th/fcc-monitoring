@@ -205,7 +205,17 @@ export default async ({ page, context }) => {
                     name = item.get("applicant", "Unknown")
                     city = item.get("city")
                     state = item.get("state")
-                    formatted_name = f"{name} ({city}, {state})" if city and state and city.lower() not in name.lower() else name
+                    
+                    # More robust location formatting
+                    location = ""
+                    if city and city.lower() != "n/a":
+                        location = city
+                        if state and state.lower() != "n/a":
+                            location = f"{city}, {state}"
+                    
+                    formatted_name = name
+                    if location and location.lower() not in name.lower():
+                        formatted_name = f"{name} ({location})"
                     
                     records.append(FCCRecord(
                         fcc_id=fcc_id,
