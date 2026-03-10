@@ -83,12 +83,22 @@ class Notifier:
                 grouped[code] = []
             grouped[code].append(r)
             
+        brand_map = {
+            "Datalogic S.r.l.": "Datalogic",
+            "Unitech Electronics Co., Ltd.": "Unitech",
+            "Honeywell International Inc.": "Honeywell", 
+            "Zebra Technologies Corporation": "Zebra",
+            "Point Mobile Co., LTD.": "Point Mobile"
+        }
+        
         # Build the message grouped by brand
         for code, records in grouped.items():
             # Get clean brand name from first record
-            brand_name = records[0].applicant_name.split('(')[0].strip()
-            # Ultimate format: 📱 CODE (Brand Name)
-            msg += f"📱 <b>{code} ({brand_name})</b>\n"
+            raw_brand = records[0].applicant_name.split('(')[0].strip()
+            brand_name = brand_map.get(raw_brand, raw_brand.split(' ')[0])
+            
+            # Ultimate format: 🏢 CODE (Brand Name)
+            msg += f"🏢 {code} ({brand_name})\n"
             
             for r in records[:20]: # Show up to 20 per brand
                 # Use application type or description
@@ -110,7 +120,95 @@ class Notifier:
             msg += "\n"
             
         if count > 20:
-            msg += f"<i>... 總計 {count} 筆新機情報已入庫。</i>"
+            msg += f"... 總計 {count} 筆新機情報已入庫。"
             
         self.send_telegram(msg)
         self.send_discord(msg)
+
+    # =========================================================================
+    # Brand Crawl Notifications
+    # =========================================================================
+    
+    def notify_brand_crawl_complete(
+        self, 
+        brand: str, 
+        fcc_id: str, 
+        product_name: str = None,
+        success: bool = True,
+        error: str = None,
+        specs: dict = None,
+        source_url: str = None
+    ):
+        """
+        Notify when brand crawl operation completes.
+        
+        Args:
+            brand: Brand name (e.g., "Honeywell", "Zebra")
+            fcc_id: FCC ID
+            product_name: Product name if found
+            success: Whether crawl was successful
+            error: Error message if failed
+            specs: Full specification dictionary for detailed notification
+            source_url: Product page URL on brand website (if available)
+        """
+        brand_emoji = {
+            "honeywell": "🐝",
+            "zebra": "🦓"
+        }
+        
+        emoji = brand_emoji.get(brand.lower(), "📡")
+        
+        if success:
+            msg = f"{emoji} <b>{brand.title()} 官網資料庫已更新</b>\n"
+            msg += f"FCC ID: <code>{fcc_id}</code>\n"
+            if product_name:
+                msg += f"產品: {product_name}\n"
+            
+            # Add source URL or FCC link for direct access
+            if source_url:
+                msg += f"🔗 官網: <a href=\"{source_url}\">查看產品頁面</a>\n"
+            else:
+                # Fallback to FCC search link
+                fcc_search_url = f"https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm?SearchType=All&FCCID={fcc_id}"
+                msg += f"🔗 FCC: <a href=\"{fcc_search_url}\">查看FCC資料</a>\n"
+            
+            # FIX: Include specific specs in the notification
+            if specs:
+                # Extract key specs to display
+                key_fields = []
+                if specs.get("product_name"):
+                    key_fields.append(f"📱 名稱: {specs['product_name']}")
+                if specs.get("model_number"):
+                    key_fields.append(f"🔢 型號: {specs['model_number']}")
+                if specs.get("frequency"):
+                    key_fields.append(f"📶 頻率: {specs['frequency']}")
+                if specs.get("output_power"):
+                    key_fields.append(f"⚡ 功率: {specs['output_power']}")
+                if specs.get("antenna_type"):
+                    key_fields.append(f"📡 天線: {specs['antenna_type']}")
+                
+                if key_fields:
+                    msg += "\n" + "\n".join(key_fields[:3])  # Show max 3 key specs
+            
+            msg += f"\n狀態: ✅ 成功抓取規格資料"
+        else:
+            msg = f"{emoji} <b>{brand.title()} 官網資料抓取失敗</b>\n"
+            msg += f"FCC ID: <code>{fcc_id}</code>\n"
+            # Always show FCC link even on failure
+            fcc_search_url = f"https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm?SearchType=All&FCCID={fcc_id}"
+            msg += f"🔗 FCC: <a href=\"{fcc_search_url}\">查看FCC資料</a>\n"
+            msg += f"錯誤: {error or 'Unknown error'}\n"
+            msg += f"狀態: ⏳ 待重試"
+        
+        self.send_telegram(msg)
+        self.send_discord(msg)
+
+    def notify_c2pc_alert(self, alert_message: str):
+        """
+        Send C2PC hardware silent upgrade alert.
+        
+        Args:
+            alert_message: Pre-formatted C2PC alert message
+        """
+        self.send_telegram(alert_message)
+        self.send_discord(alert_message)
