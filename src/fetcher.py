@@ -1,6 +1,19 @@
-"""Data fetchers for FCC/SpiderCloud/Browser APIs."""
+"""Data fetchers for FCC/SpiderCloud/Browser APIs.
+
+Architecture:
+  SpiderCloudProxy   — Network layer: routes HTTP requests through spider.cloud
+                       to bypass Akamai bot-detection on apps.fcc.gov.
+  SpiderCloudFetcher — Primary fetcher: uses SpiderCloudProxy to scrape the
+                       FCC EAS search page and parse results.
+  BrowserlessFetcher — Secondary fetcher: uses Browserless.io JS execution
+                       as an alternative browser-based scraping path.
+  PlaywrightFetcher  — Tertiary fetcher: local Playwright instance (fallback).
+  get_fetcher()      — Factory; selects strategy from settings or explicit arg.
+"""
+
 import json
 import logging
+import re
 import time
 from typing import List, Optional, Dict, Any
 from urllib import request, parse, error
@@ -11,94 +24,405 @@ from loguru import logger
 from .config import get_settings
 from .models import FCCRecord
 
-# ============================================================================
-# Fetcher Interfaces & Base
-# ============================================================================
+
+# ---------------------------------------------------------------------------
+# Base
+# ---------------------------------------------------------------------------
 
 class BaseFetcher:
     """Base class for all fetchers."""
+
     def __init__(self):
         self.settings = get_settings()
 
     def fetch_by_grantee(self, grantee_code: str) -> List[FCCRecord]:
         raise NotImplementedError
 
-# ============================================================================
-# SpiderCloud Fetcher
-# ============================================================================
 
-class SpiderCloudFetcher(BaseFetcher):
-    """Fetch FCC certification data from SpiderCloud API."""
-    
-    def __init__(self):
-        super().__init__()
+# ===========================================================================
+# SpiderCloud Proxy  ─  Network / Infrastructure Layer
+# ===========================================================================
+
+class SpiderCloudProxy:
+    """
+    Wraps spider.cloud's Scrape API as a network-level HTTP transport.
+
+    spider.cloud routes requests through its infrastructure (residential
+    proxies, headless Chromium, JS rendering) and returns the fully-rendered
+    page HTML.  This transparently bypasses Akamai Bot Manager checks that
+    block plain httpx / requests calls to apps.fcc.gov.
+
+    Usage:
+        proxy = SpiderCloudProxy(api_key="sk-...")
+        html  = proxy.fetch_html("https://apps.fcc.gov/...")
+        resp  = proxy.post_form("https://apps.fcc.gov/...", form_data={...})
+
+    API reference: https://spider.cloud/docs/api
+    """
+
+    BASE_URL = "https://api.spider.cloud"
+    SCRAPE_ENDPOINT = "/scrape"
+
+    # spider.cloud return formats
+    FORMAT_HTML     = "html"
+    FORMAT_MARKDOWN = "markdown"
+    FORMAT_BYTES    = "bytes"
+
+    def __init__(
+        self,
+        api_key: str,
+        *,
+        stealth: bool = True,
+        proxy_enabled: bool = True,
+        render_js: bool = True,
+        timeout: float = 60.0,
+        max_retries: int = 3,
+        retry_delay: float = 5.0,
+    ):
+        if not api_key:
+            raise ValueError("SpiderCloudProxy requires a valid api_key")
+
+        self.api_key       = api_key
+        self.stealth       = stealth
+        self.proxy_enabled = proxy_enabled
+        self.render_js     = render_js
+        self.timeout       = timeout
+        self.max_retries   = max_retries
+        self.retry_delay   = retry_delay
+
         self._session: Optional[httpx.Client] = None
-    
+
+    # ------------------------------------------------------------------
+    # Session management
+    # ------------------------------------------------------------------
+
     @property
     def session(self) -> httpx.Client:
-        if self._session is None:
+        if self._session is None or self._session.is_closed:
             self._session = httpx.Client(
-                timeout=30.0,
+                timeout=self.timeout,
                 follow_redirects=True,
-                headers={"User-Agent": "FCC-Monitor/1.0"}
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type":  "application/json",
+                    "User-Agent":    "fcc-monitor/2.0 (+spider.cloud)",
+                },
             )
         return self._session
-    
-    def fetch_by_grantee(self, grantee_code: str) -> List[FCCRecord]:
-        cfg = self.settings.data_source.spidercloud
-        if not cfg.api_key:
-            logger.warning("SpiderCloud API key not configured")
-            return []
-        
-        url = f"{cfg.base_url}/fcc/search"
-        headers = {
-            "Authorization": f"Bearer {cfg.api_key}",
-            "Content-Type": "application/json"
-        }
-        params = {
-            "grantee_code": grantee_code,
-            "limit": 1000
-        }
-        
-        try:
-            response = self.session.get(url, headers=headers, params=params)
-            response.raise_for_status()
-            data = response.json()
-            
-            records = []
-            items = data.get("results", data.get("data", []))
-            for item in items:
-                records.append(FCCRecord(
-                    fcc_id=item.get("fcc_id", ""),
-                    grantee_code=item.get("grantee_code", ""),
-                    product_code=item.get("product_code", ""),
-                    applicant_name=item.get("applicant_name", ""),
-                    product_name=item.get("product_name", ""),
-                    certification_date=item.get("certification_date", ""),
-                    status=item.get("status", "Granted"),
-                    expires_on=item.get("expires_on")
-                ))
-            return records
-        except httpx.HTTPError as e:
-            logger.error(f"SpiderCloud API error: {e}")
-            return []
-        finally:
-            if self._session:
-                self._session.close()
-                self._session = None
 
-# ============================================================================
-# Browserless REST Fetcher
-# ============================================================================
+    def close(self):
+        if self._session and not self._session.is_closed:
+            self._session.close()
+            self._session = None
+
+    # ------------------------------------------------------------------
+    # Core API calls
+    # ------------------------------------------------------------------
+
+    def _build_payload(
+        self,
+        url: str,
+        *,
+        return_format: str = FORMAT_HTML,
+        post_body: Optional[str] = None,
+        extra: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "url":           url,
+            "return_format": return_format,
+            "stealth":       1 if self.stealth else 0,
+            "proxy_enabled": self.proxy_enabled,
+            "render_js":     self.render_js,
+            "anti_bot":      True,          # explicit Akamai/Cloudflare bypass
+        }
+        if post_body is not None:
+            payload["http_method"] = "POST"
+            payload["body"]        = post_body
+        if extra:
+            payload.update(extra)
+        return payload
+
+    def _request_with_retry(self, payload: Dict[str, Any]) -> Optional[str]:
+        """POST payload to /scrape; return raw response text or None."""
+        url = self.BASE_URL + self.SCRAPE_ENDPOINT
+
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                resp = self.session.post(url, json=payload)
+                resp.raise_for_status()
+
+                data = resp.json()
+
+                # spider.cloud wraps content in a list or object
+                if isinstance(data, list) and data:
+                    return data[0].get("content") or data[0].get("html") or ""
+                if isinstance(data, dict):
+                    return data.get("content") or data.get("html") or ""
+
+                logger.warning(f"[SpiderCloudProxy] Unexpected response shape: {type(data)}")
+                return None
+
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                logger.warning(
+                    f"[SpiderCloudProxy] HTTP {status} on attempt {attempt}/{self.max_retries}"
+                )
+                if status in (429, 503) and attempt < self.max_retries:
+                    time.sleep(self.retry_delay * attempt)
+                    continue
+                logger.error(f"[SpiderCloudProxy] Non-retryable HTTP error: {exc}")
+                return None
+
+            except httpx.RequestError as exc:
+                logger.warning(
+                    f"[SpiderCloudProxy] Request error on attempt {attempt}/{self.max_retries}: {exc}"
+                )
+                if attempt < self.max_retries:
+                    time.sleep(self.retry_delay * attempt)
+                    continue
+                return None
+
+        return None
+
+    # ------------------------------------------------------------------
+    # Public helpers
+    # ------------------------------------------------------------------
+
+    def fetch_html(self, url: str, **extra) -> Optional[str]:
+        """GET a URL; return rendered HTML (Akamai-bypassed)."""
+        payload = self._build_payload(url, return_format=self.FORMAT_HTML, extra=extra or None)
+        return self._request_with_retry(payload)
+
+    def post_form(self, url: str, form_data: Dict[str, str], **extra) -> Optional[str]:
+        """
+        Simulate an HTML form POST through spider.cloud.
+
+        *form_data* is URL-encoded and sent as the request body; spider.cloud
+        issues the POST on our behalf from its infrastructure.
+        """
+        body    = parse.urlencode(form_data)
+        payload = self._build_payload(
+            url,
+            return_format=self.FORMAT_HTML,
+            post_body=body,
+            extra=extra or None,
+        )
+        return self._request_with_retry(payload)
+
+
+# ===========================================================================
+# SpiderCloud Fetcher  ─  Primary Fetcher (Akamai-bypass path)
+# ===========================================================================
+
+class SpiderCloudFetcher(BaseFetcher):
+    """
+    Fetch FCC EAS certification data using spider.cloud as the network layer.
+
+    Strategy:
+      1. Open the FCC EAS Generic Search page via SpiderCloudProxy.
+      2. POST a search form for the requested grantee_code.
+      3. Parse the results table from the returned HTML.
+
+    This approach never touches apps.fcc.gov directly from our IP; all
+    requests are proxied through spider.cloud's infrastructure, bypassing
+    Akamai Bot Manager transparently.
+    """
+
+    FCC_SEARCH_URL = (
+        "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm"
+    )
+
+    def __init__(self):
+        super().__init__()
+        cfg = self.settings.data_source.spidercloud
+        self._proxy: Optional[SpiderCloudProxy] = None
+
+        if cfg.api_key:
+            self._proxy = SpiderCloudProxy(
+                api_key       = cfg.api_key,
+                stealth       = True,
+                proxy_enabled = True,
+                render_js     = True,
+                timeout       = cfg.timeout,
+                max_retries   = cfg.max_retries,
+            )
+        else:
+            logger.warning(
+                "[SpiderCloudFetcher] No SPIDERCLOUD_API_KEY configured; "
+                "fetcher is disabled."
+            )
+
+    # ------------------------------------------------------------------
+
+    def fetch_by_grantee(self, grantee_code: str) -> List[FCCRecord]:
+        if not self._proxy:
+            return []
+
+        logger.info(f"[SpiderCloudFetcher] Fetching grantee: {grantee_code}")
+
+        form_data = {
+            "grantee_code":  grantee_code,
+            "show_records":  "500",
+            "action":        "Submit",
+        }
+
+        html = self._proxy.post_form(self.FCC_SEARCH_URL, form_data)
+        if not html:
+            logger.error(
+                f"[SpiderCloudFetcher] No HTML returned for {grantee_code}"
+            )
+            return []
+
+        # Akamai block detection
+        if _is_akamai_block(html):
+            logger.warning(
+                f"[SpiderCloudFetcher] Akamai block still detected for "
+                f"{grantee_code}; spider.cloud stealth may need adjustment."
+            )
+            return []
+
+        records = _parse_fcc_search_html(html, grantee_code)
+        logger.info(
+            f"[SpiderCloudFetcher] Parsed {len(records)} records for {grantee_code}"
+        )
+        return records
+
+    def close(self):
+        if self._proxy:
+            self._proxy.close()
+
+
+# ===========================================================================
+# HTML Parsing helpers
+# ===========================================================================
+
+def _is_akamai_block(html: str) -> bool:
+    """Heuristic: detect Akamai / bot-manager rejection pages."""
+    lower = html.lower()
+    signals = [
+        "access denied",
+        "reference #",       # Akamai reference ID
+        "akamai",
+        "your browser sent a request",
+        "robot or automated",
+    ]
+    return any(s in lower for s in signals)
+
+
+def _parse_fcc_search_html(html: str, grantee_code: str) -> List[FCCRecord]:
+    """
+    Parse the FCC EAS generic search results table from raw HTML.
+
+    The page renders an HTML table with columns such as:
+      FCC ID | Final Action | Filing Date | Applicant | Product Description | ...
+
+    We use regex + simple parsing (no external deps like BeautifulSoup) so
+    the fetcher works in minimal environments.
+    """
+    records: List[FCCRecord] = []
+
+    # Strip HTML tags helper
+    def strip_tags(s: str) -> str:
+        return re.sub(r"<[^>]+>", "", s).strip()
+
+    # Locate <table> blocks
+    table_pattern = re.compile(
+        r"<table[^>]*>(.*?)</table>", re.IGNORECASE | re.DOTALL
+    )
+
+    for table_match in table_pattern.finditer(html):
+        table_html = table_match.group(0)
+
+        # Find rows
+        row_pattern  = re.compile(r"<tr[^>]*>(.*?)</tr>", re.IGNORECASE | re.DOTALL)
+        cell_pattern = re.compile(r"<t[hd][^>]*>(.*?)</t[hd]>", re.IGNORECASE | re.DOTALL)
+
+        rows = row_pattern.findall(table_html)
+        if len(rows) < 2:
+            continue
+
+        # Parse header
+        headers = [strip_tags(c).lower() for c in cell_pattern.findall(rows[0])]
+        if not any("fcc" in h for h in headers):
+            continue  # not the results table
+
+        # Map column positions
+        col: Dict[str, int] = {}
+        for i, h in enumerate(headers):
+            if "fcc" in h and "id" in h:
+                col.setdefault("fcc_id", i)
+            elif ("final" in h and "action" in h) or ("grant" in h and "date" in h):
+                col.setdefault("grant_date", i)
+            elif "filing" in h and "date" in h:
+                col.setdefault("filing_date", i)
+            elif "applicant" in h or ("name" in h and "applicant" not in col):
+                col.setdefault("applicant", i)
+            elif "product" in h or "description" in h:
+                col.setdefault("product_desc", i)
+            elif "purpose" in h or "type" in h:
+                col.setdefault("app_type", i)
+            elif "city" in h:
+                col.setdefault("city", i)
+            elif "state" in h:
+                col.setdefault("state", i)
+
+        if "fcc_id" not in col:
+            continue
+
+        # Parse data rows
+        for row_html in rows[1:]:
+            cells = [strip_tags(c) for c in cell_pattern.findall(row_html)]
+            if len(cells) < 3:
+                continue
+
+            def get(key: str) -> str:
+                idx = col.get(key)
+                if idx is None or idx >= len(cells):
+                    return ""
+                return cells[idx].strip()
+
+            fcc_id = get("fcc_id").replace(" ", "")
+            if not fcc_id or not fcc_id.startswith(grantee_code):
+                continue
+
+            product_code = fcc_id[len(grantee_code):]
+
+            # Format location into applicant_name
+            city  = get("city")
+            state = get("state")
+            name  = get("applicant") or "Unknown"
+            loc_parts = [p for p in [city, state] if p and p.lower() != "n/a"]
+            location  = ", ".join(loc_parts)
+            if location and location.lower() not in name.lower():
+                name = f"{name} ({location})"
+
+            records.append(FCCRecord(
+                fcc_id           = fcc_id,
+                grantee_code     = grantee_code,
+                product_code     = product_code,
+                applicant_name   = name,
+                product_description = get("product_desc"),
+                grant_date       = get("grant_date"),
+                filing_date      = get("filing_date"),
+                application_type = get("app_type"),
+                status           = "Granted",
+            ))
+
+    return records
+
+
+# ===========================================================================
+# Browserless REST Fetcher  ─  Secondary (JS-rendered fallback)
+# ===========================================================================
 
 class BrowserlessFetcher(BaseFetcher):
     """Fetch data via Browserless cloud service (/function endpoint)."""
-    
+
     JS_TEMPLATE = """
 export default async ({ page, context }) => {
   const granteeCode = context.granteeCode;
   const searchUrl = 'https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm';
-  
+
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
   await page.setViewport({ width: 1280, height: 800 });
 
@@ -109,13 +433,13 @@ export default async ({ page, context }) => {
 
     await page.waitForSelector('input[name="grantee_code"]', { timeout: 15000 });
     await page.type('input[name="grantee_code"]', granteeCode, { delay: 100 });
-    
+
     await page.evaluate(() => {
       const showRecs = document.querySelector('input[name="show_records"]');
       if (showRecs) showRecs.value = '';
     });
     await page.type('input[name="show_records"]', '500', { delay: 50 });
-    
+
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }),
       page.click('input[type="submit"]')
@@ -125,7 +449,7 @@ export default async ({ page, context }) => {
       const tables = Array.from(document.querySelectorAll('table'));
       let resultsTable = null;
       let headers = [];
-      
+
       for (const table of tables) {
         const firstRow = table.querySelector('tr');
         if (!firstRow) continue;
@@ -137,7 +461,7 @@ export default async ({ page, context }) => {
         }
       }
       if (!resultsTable) return { error: 'Results table not found' };
-      
+
       const colMap = {};
       headers.forEach((h, i) => {
         if (h.includes('fcc') && h.includes('id')) colMap.fcc_id = i;
@@ -151,7 +475,7 @@ export default async ({ page, context }) => {
         else if (h.includes('city')) colMap.city = i;
         else if (h.includes('state')) colMap.state = i;
       });
-      
+
       const rows = Array.from(resultsTable.querySelectorAll('tr')).slice(1);
       const records = rows.map(row => {
         const cells = Array.from(row.querySelectorAll('td'));
@@ -176,16 +500,16 @@ export default async ({ page, context }) => {
         if not cfg.api_key:
             logger.error("BROWSERLESS_API_KEY missing!")
             return []
-            
+
         url = f"https://production-{cfg.region}.browserless.io/function?token={cfg.api_key}"
         payload = {
-            "code": self.JS_TEMPLATE,
-            "context": {"granteeCode": grantee_code}
+            "code":    self.JS_TEMPLATE,
+            "context": {"granteeCode": grantee_code},
         }
-        
-        data = json.dumps(payload).encode('utf-8')
-        headers = {'Content-Type': 'application/json', 'Cache-Control': 'no-cache'}
-        
+
+        data = json.dumps(payload).encode("utf-8")
+        headers = {"Content-Type": "application/json", "Cache-Control": "no-cache"}
+
         try:
             req = request.Request(url, data=data, headers=headers)
             with request.urlopen(req, timeout=120) as response:
@@ -193,64 +517,90 @@ export default async ({ page, context }) => {
                 if "error" in result:
                     logger.error(f"Browserless error: {result['error']}")
                     return []
-                
+
                 raw_recs = result.get("records", [])
-                records = []
+                records  = []
                 for item in raw_recs:
                     fcc_id = item.get("fcc_id", "").replace(" ", "")
-                    if not fcc_id: continue
-                    
-                    p_code = fcc_id[len(grantee_code):] if fcc_id.startswith(grantee_code) else fcc_id
-                    
-                    name = item.get("applicant", "Unknown")
-                    city = item.get("city")
+                    if not fcc_id:
+                        continue
+
+                    p_code = (
+                        fcc_id[len(grantee_code):]
+                        if fcc_id.startswith(grantee_code)
+                        else fcc_id
+                    )
+
+                    name  = item.get("applicant", "Unknown")
+                    city  = item.get("city")
                     state = item.get("state")
-                    
-                    # More robust location formatting
+
                     location = ""
                     if city and city.lower() != "n/a":
                         location = city
                         if state and state.lower() != "n/a":
                             location = f"{city}, {state}"
-                    
+
                     formatted_name = name
                     if location and location.lower() not in name.lower():
                         formatted_name = f"{name} ({location})"
-                    
+
                     records.append(FCCRecord(
-                        fcc_id=fcc_id,
-                        grantee_code=grantee_code,
-                        product_code=p_code,
-                        applicant_name=formatted_name,
-                        product_description=item.get("product_desc", ""),
-                        grant_date=item.get("grant_date", ""),
-                        filing_date=item.get("filing_date", ""),
-                        application_type=item.get("app_type", "")
+                        fcc_id              = fcc_id,
+                        grantee_code        = grantee_code,
+                        product_code        = p_code,
+                        applicant_name      = formatted_name,
+                        product_description = item.get("product_desc", ""),
+                        grant_date          = item.get("grant_date", ""),
+                        filing_date         = item.get("filing_date", ""),
+                        application_type    = item.get("app_type", ""),
                     ))
                 return records
         except Exception as e:
             logger.error(f"Browserless fetch failed: {e}")
             return []
 
-# ============================================================================
-# Playwright Fetcher
-# ============================================================================
+
+# ===========================================================================
+# Playwright Fetcher  ─  Tertiary (local browser fallback)
+# ===========================================================================
 
 class PlaywrightFetcher(BaseFetcher):
-    """Fetch data using local Playwright instance."""
-    # (Implementation omitted for brevity, but can be added if needed)
-    # Since crawler_browser.py is very long, let's just use the logic if required.
-    # For now, we focus on the most reliable ones.
+    """Fetch data using a local Playwright instance (dev/fallback only)."""
+
     def fetch_by_grantee(self, grantee_code: str) -> List[FCCRecord]:
-        logger.warning("PlaywrightFetcher not fully implemented in refactor yet.")
+        logger.warning("PlaywrightFetcher not fully implemented; skipping.")
         return []
 
-# ============================================================================
-# Fetcher Factory
-# ============================================================================
 
-def get_fetcher(strategy: str = "spidercloud") -> BaseFetcher:
-    """Get fetcher instance based on strategy."""
+# ===========================================================================
+# Factory
+# ===========================================================================
+
+def get_fetcher(strategy: Optional[str] = None) -> BaseFetcher:
+    """
+    Return an appropriate fetcher instance.
+
+    Priority (when strategy is None):
+      1. spidercloud  — if SPIDERCLOUD_API_KEY is set  (Akamai-bypass path)
+      2. browserless  — if BROWSERLESS_API_KEY is set  (JS-rendered fallback)
+      3. playwright   — local Playwright (last resort)
+
+    Explicitly pass strategy='browserless' or 'playwright' to override.
+    """
+    settings = get_settings()
+
+    if strategy is None:
+        # Auto-detect best available strategy
+        if settings.data_source.spidercloud.api_key:
+            strategy = "spidercloud"
+        elif settings.data_source.browserless.api_key:
+            strategy = "browserless"
+        else:
+            strategy = "playwright"
+
+    logger.info(f"[get_fetcher] Using strategy: {strategy}")
+
     if strategy == "spidercloud":
         return SpiderCloudFetcher()
     elif strategy == "browserless":
@@ -258,4 +608,4 @@ def get_fetcher(strategy: str = "spidercloud") -> BaseFetcher:
     elif strategy == "playwright":
         return PlaywrightFetcher()
     else:
-        raise ValueError(f"Unknown strategy: {strategy}")
+        raise ValueError(f"Unknown fetcher strategy: {strategy!r}")

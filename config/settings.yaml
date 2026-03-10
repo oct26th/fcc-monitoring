@@ -21,11 +21,17 @@ target_grantees:
 
 # Data source configuration
 data_source:
-  # Option 1: SpiderCloud API
+  # Option 1: spider.cloud — Akamai bypass via managed proxy/rendering infra
+  # Set SPIDERCLOUD_API_KEY in environment.  Get a key at https://spider.cloud
   spidercloud:
     enabled: true
     api_key: "${SPIDERCLOUD_API_KEY}"
-    base_url: "https://api.spidercloud.com/v1"
+    base_url: "https://api.spider.cloud"
+    stealth: true          # JS fingerprint randomisation (defeats Akamai TLS fingerprint checks)
+    proxy_enabled: true    # Route through spider.cloud residential proxy pool
+    render_js: true        # Full JS execution before returning HTML
+    timeout: 60.0          # seconds per request
+    max_retries: 3         # retry on 429 / 503
 
   # Option 2: FCC EAS Direct (fallback)
   fcc:

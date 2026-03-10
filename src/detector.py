@@ -5,7 +5,7 @@ from typing import Optional
 
 from loguru import logger
 
-from .fetcher import FCCRecord
+from .models import FCCRecord
 
 
 class ChangeType(Enum):

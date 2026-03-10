@@ -6,9 +6,15 @@ apscheduler>=3.10.0
 pyyaml>=6.0
 sqlalchemy>=2.0
 pydantic>=2.0
+pydantic-settings>=2.0
 structlog>=24.0
-# loguru>=0.7 (Removed to reduce dependencies)
+loguru>=0.7.0
 python-dotenv>=1.0
 
-# Browser automation
+# spider.cloud — Akamai-bypass scraping infrastructure
+# Docs: https://spider.cloud/docs/api
+# SDK:  https://github.com/spider-rs/spider-clients/tree/main/python
+spider-client>=0.0.27
+
+# Browser automation (fallback path)
 playwright>=1.40.0

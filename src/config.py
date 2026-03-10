@@ -14,10 +14,30 @@ PROJECT_ROOT = Path(__file__).parent.parent
 
 
 class SpiderCloudConfig(BaseModel):
-    """SpiderCloud API configuration."""
-    enabled: bool = True
-    api_key: str = ""
-    base_url: str = "https://api.spidercloud.com/v1"
+    """SpiderCloud (spider.cloud) configuration.
+
+    spider.cloud is used as the **network/infrastructure layer** to bypass
+    Akamai Bot Manager when scraping apps.fcc.gov.  Set api_key via the
+    SPIDERCLOUD_API_KEY environment variable.
+
+    Attributes:
+        enabled:      Toggle spider.cloud integration on/off.
+        api_key:      Bearer token for the spider.cloud API.
+        base_url:     spider.cloud API base URL (rarely needs changing).
+        stealth:      Enable stealth mode (JS fingerprint randomisation).
+        proxy_enabled: Route through spider.cloud residential proxies.
+        render_js:    Render JavaScript before returning HTML.
+        timeout:      Per-request timeout in seconds.
+        max_retries:  How many times to retry on 429/503 errors.
+    """
+    enabled:       bool  = True
+    api_key:       str   = ""
+    base_url:      str   = "https://api.spider.cloud"
+    stealth:       bool  = True
+    proxy_enabled: bool  = True
+    render_js:     bool  = True
+    timeout:       float = 60.0
+    max_retries:   int   = 3
 
 
 class BrowserlessConfig(BaseSettings):
