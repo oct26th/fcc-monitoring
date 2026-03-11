@@ -591,58 +591,30 @@ export default async ({ page, context }) => {
 
 
 # ===========================================================================
-# SpiderCloud Script Fetcher  ─  Fixed POST path via automation_scripts
+# SpiderCloud Script Fetcher  ─  Fixed POST path via CDP cloud browser
 # ===========================================================================
 
 class SpiderCloudScriptFetcher(BaseFetcher):
     """
-    Fetch FCC EAS results using spider.cloud's automation_scripts (pipeline) API.
+    Fetch FCC EAS results by connecting Playwright to spider.cloud's CDP cloud browser.
 
     WHY THIS EXISTS:
       SpiderCloudFetcher.post_form() is broken: spider.cloud's /scrape endpoint
       silently drops the POST body, so grantee_code never reaches apps.fcc.gov.
 
     HOW THIS WORKS:
-      spider.cloud's /pipeline endpoint accepts a JavaScript automation script
-      that runs inside a managed Chromium instance.  The script navigates to the
-      FCC search page, fills in grantee_code, submits the form, and returns the
-      rendered HTML — preserving the POST semantics at the browser level.
+      spider.cloud exposes a full cloud Chromium browser over a CDP WebSocket at
+        wss://browser.spider.cloud/v1/browser?token=<API_KEY>
+      We connect Playwright via connect_over_cdp(), navigate to the FCC search
+      page, fill in grantee_code, submit the form, and parse the resulting HTML.
+      The browser runs inside spider.cloud's infrastructure with built-in stealth
+      and proxy rotation — so Akamai Bot Manager is bypassed transparently.
 
-    API reference: https://spider.cloud/docs/automation
+    API reference: https://spider.cloud/docs/api  (see "Cloud Browser / CDP" section)
     """
 
-    PIPELINE_ENDPOINT = "https://api.spider.cloud/pipeline"
-
-    # JavaScript automation script executed inside spider.cloud's Chromium.
-    # The placeholder {grantee_code} is replaced at call time.
-    _JS_TEMPLATE = """
-async function run(page) {
-  const searchUrl = 'https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm';
-
-  await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-
-  const title = await page.title();
-  if (title.toLowerCase().includes('access denied')) {
-    throw new Error('Akamai block on initial page load');
-  }
-
-  await page.waitForSelector('input[name="grantee_code"]', { timeout: 15000 });
-  await page.type('input[name="grantee_code"]', '{grantee_code}', { delay: 80 });
-
-  // Set show_records to 500 for maximum results
-  await page.evaluate(() => {
-    const el = document.querySelector('input[name="show_records"]');
-    if (el) el.value = '500';
-  });
-
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }),
-    page.click('input[type="submit"]'),
-  ]);
-
-  return await page.content();
-}
-"""
+    CDP_WS_URL = "wss://browser.spider.cloud/v1/browser"
+    FCC_SEARCH_URL = "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm"
 
     def __init__(self):
         super().__init__()
@@ -661,78 +633,78 @@ async function run(page) {
 
         logger.info(f"[SpiderCloudScriptFetcher] Fetching grantee: {grantee_code}")
 
-        script = self._JS_TEMPLATE.replace("{grantee_code}", grantee_code)
-
-        payload = {
-            "script": script,
-            "url": "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm",
-            "stealth": True,
-            "proxy_enabled": True,
-        }
-
         for attempt in range(1, self.max_retries + 1):
             try:
-                with httpx.Client(timeout=self.timeout) as client:
-                    resp = client.post(
-                        self.PIPELINE_ENDPOINT,
-                        json=payload,
-                        headers={
-                            "Authorization": f"Bearer {self.api_key}",
-                            "Content-Type": "application/json",
-                        },
-                    )
-                    resp.raise_for_status()
-                    data = resp.json()
-
-                # Extract HTML from response (spider.cloud wraps in list or dict)
-                html = None
-                if isinstance(data, list) and data:
-                    html = data[0].get("content") or data[0].get("html") or ""
-                elif isinstance(data, dict):
-                    html = data.get("content") or data.get("html") or ""
-
-                if not html:
-                    logger.warning(
-                        f"[SpiderCloudScriptFetcher] Empty response for {grantee_code} "
-                        f"(attempt {attempt})"
-                    )
-                    if attempt < self.max_retries:
-                        time.sleep(5 * attempt)
-                    continue
-
-                if _is_akamai_block(html):
-                    logger.warning(
-                        f"[SpiderCloudScriptFetcher] Akamai block for {grantee_code}"
-                    )
-                    return []
-
-                records = _parse_fcc_search_html(html, grantee_code)
-                logger.info(
-                    f"[SpiderCloudScriptFetcher] Parsed {len(records)} records "
-                    f"for {grantee_code}"
-                )
-                return records
-
-            except httpx.HTTPStatusError as exc:
+                html = self._fetch_via_cdp(grantee_code)
+            except Exception as exc:
                 logger.warning(
-                    f"[SpiderCloudScriptFetcher] HTTP {exc.response.status_code} "
-                    f"on attempt {attempt}/{self.max_retries}"
-                )
-                if exc.response.status_code in (429, 503) and attempt < self.max_retries:
-                    time.sleep(5 * attempt)
-                    continue
-                return []
-
-            except httpx.RequestError as exc:
-                logger.warning(
-                    f"[SpiderCloudScriptFetcher] Request error attempt "
-                    f"{attempt}/{self.max_retries}: {exc}"
+                    f"[SpiderCloudScriptFetcher] Attempt {attempt}/{self.max_retries} "
+                    f"failed: {exc}"
                 )
                 if attempt < self.max_retries:
                     time.sleep(5 * attempt)
                 continue
 
+            if not html:
+                logger.warning(
+                    f"[SpiderCloudScriptFetcher] Empty HTML for {grantee_code} "
+                    f"(attempt {attempt})"
+                )
+                if attempt < self.max_retries:
+                    time.sleep(5 * attempt)
+                continue
+
+            if _is_akamai_block(html):
+                logger.warning(
+                    f"[SpiderCloudScriptFetcher] Akamai block for {grantee_code}"
+                )
+                return []
+
+            records = _parse_fcc_search_html(html, grantee_code)
+            logger.info(
+                f"[SpiderCloudScriptFetcher] Parsed {len(records)} records "
+                f"for {grantee_code}"
+            )
+            return records
+
         return []
+
+    def _fetch_via_cdp(self, grantee_code: str) -> Optional[str]:
+        """Connect to spider.cloud CDP browser, fill FCC form, return page HTML."""
+        from playwright.sync_api import sync_playwright
+
+        cdp_url = f"{self.CDP_WS_URL}?token={self.api_key}"
+        nav_timeout = int(self.timeout * 1000)  # Playwright uses ms
+
+        with sync_playwright() as pw:
+            browser = pw.chromium.connect_over_cdp(cdp_url, timeout=nav_timeout)
+            try:
+                context = browser.new_context(
+                    user_agent=(
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/120.0.0.0 Safari/537.36"
+                    ),
+                    viewport={"width": 1280, "height": 800},
+                )
+                page = context.new_page()
+
+                page.goto(self.FCC_SEARCH_URL, wait_until="networkidle", timeout=nav_timeout)
+
+                title = page.title()
+                if "access denied" in title.lower():
+                    raise RuntimeError("Akamai block on initial page load")
+
+                page.wait_for_selector('input[name="grantee_code"]', timeout=15000)
+                page.fill('input[name="grantee_code"]', grantee_code)
+                page.fill('input[name="show_records"]', "500")
+
+                page.click('input[type="submit"]')
+                page.wait_for_load_state("networkidle", timeout=nav_timeout)
+
+                return page.content()
+            finally:
+                browser.close()
 
 
 # ===========================================================================
