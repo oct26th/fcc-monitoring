@@ -1,169 +1,226 @@
-# FCC 認證監控系統 - 技術架構設計
+# FCC 認證監控系統 — 技術架構（v2.0）
 
-## 1. SpiderCloud API 評估
-
-### 1.1 FCC 公開數據獲取方式
-
-FCC 設備授權（Equipment Authorization）數據可透過以下途徑取得：
-
-| 來源 | 類型 | 適用場景 |
-|------|------|----------|
-| FCC EAS 數據下載 | CSV/JSON bulk download | 每日全量同步 |
-| FCC OET API | REST API | 實時查詢特定 Grantee |
-| SpiderCloud 第三方服務 | API Wrapper | 已整合的商業服務 |
-
-### 1.2 SpiderCloud 評估
-
-**SpiderCloud** 通常提供：
-- 已包裝的 FCC/監管數據 API
-- 預先處理的搜尋與過濾功能
-- 變更追蹤與通知 Webhook
-
-**建議做法**：
-1. 若已購買 SpiderCloud 服務，使用其 API 查詢 Grantee Code（如 Zebra = A3L, SKY）
-2. 若無，使用 FCC 官方的公開數據端點
-3. 本設計假設使用 **FCC EAS Bulk Download** + 自建監控邏輯
-
-### 1.3 監控對象 Grantee Code
-
-| 公司 | Grantee Code | 備註 |
-|------|--------------|------|
-| Zebra Technologies | A3L, SKY | |
-| Honeywell | HD5, NORAND | 多個代碼 |
-| Datalogic | RC4, U1A | |
-| Unitech | MXN, NXP | |
+> 更新日期：2026-03
+> 上一版：v1.0（2026-02-24）已廢棄
 
 ---
 
-## 2. 資料流程設計
+## 1. 專案目的
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  SpiderCloud    │    │  Data Pipeline   │    │  Notification   │
-│  API / FCC EAS  │───▶│  (Python)        │───▶│  (Telegram Bot) │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-        │                      │                        │
-        ▼                      ▼                        ▼
-  取得認證數據           過濾 → 差異比對 → 儲存      發送變更通知
-```
+監控特定品牌在 FCC（美國聯邦通訊委員會）Equipment Authorization System 的新申請，
+第一時間偵測競品新型號動向，並自動下載 Label PDF 取得詳細認證資料。
 
-### 2.1 資料流程步驟
+**監控對象**（工業條碼機 / 行動電腦）：
 
-1. **數據獲取** (每日)
-   - 從 SpiderCloud API 或 FCC EAS 下載最新認證數據
-   - 按 Grantee Code 過濾目標公司
-
-2. **數據處理**
-   - 解析 FCC ID、產品名稱、認證日期、證書狀態
-   - 去除無效/過期認證
-
-3. **變更偵測**
-   - 與上次同步的本地數據比對
-   - 識別新增、移除、狀態變更
-
-4. **通知觸發**
-   - 偵測到變更 → 發送 Telegram 訊息
-   - 包含 FCC ID、產品資訊、變更類型
+| 公司 | Grantee Code |
+|------|--------------|
+| Zebra Technologies | V2X, SS4 |
+| Honeywell | HD5 |
+| Motorola Solutions | U4F, U4G |
+| Symbol Technologies | HLE |
+| 其他 | UZ7, 2AOJL, 2AC6A, 2AR9L |
 
 ---
 
-## 3. 實作規劃
+## 2. 系統架構
 
-### 3.1 技術選型
+### 2.1 整體流程
 
-| 層面 | 選擇 | 理由 |
+```
+main.py
+  │
+  ├─ config.py           載入 settings.yaml + 環境變數
+  │
+  ├─ fetcher.py          抓取 FCC EAS 搜尋頁（返回 List[FCCRecord]）
+  │    ├─ SpiderCloudScriptFetcher  ← 主路徑（automation_scripts）
+  │    ├─ BrowserlessFetcher        ← 備案（headless browser）
+  │    └─ PlaywrightFetcher         ← 本地備案
+  │
+  ├─ database.py         SQLite CRUD（判斷新舊 ID）
+  │
+  ├─ pdf_fetcher.py      對每個新 FCC ID 下載 Label PDF
+  │    └─ data/pdfs/{FCC_ID}/*.pdf
+  │
+  └─ notifier.py         Telegram / Discord 通知
+```
+
+### 2.2 FCC 資料流
+
+```
+FCC EAS 搜尋頁
+  https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+  → POST grantee_code=V2X → 結果列表 → parse → List[FCCRecord]
+
+FCC Exhibit 列表頁（per FCC ID）
+  https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm
+  ?application_id=XXXXX&ID_Code=V2XFCC123
+  → 找出 Label 類型附件 → attachment_id
+
+FCC Label PDF 下載
+  https://apps.fcc.gov/oetcf/eas/reports/GetApplicationAttachment.html
+  ?calledFromFrame=N&id={attachment_id}&idType=APPID
+  → 儲存至 data/pdfs/{FCC_ID}/Label_{id}.pdf
+```
+
+---
+
+## 3. 模組說明
+
+### 3.1 `src/models.py` — 資料模型
+
+核心資料結構 `FCCRecord`（dataclass）：
+
+```python
+@dataclass
+class FCCRecord:
+    fcc_id: str
+    grantee_code: str
+    product_code: str
+    applicant_name: str
+    product_description: str
+    grant_date: str
+    filing_date: str
+    application_type: str
+    status: str = "Granted"
+    expires_on: Optional[str] = None
+```
+
+### 3.2 `src/fetcher.py` — FCC 資料抓取
+
+| 類別 | 路徑 | 狀態 |
 |------|------|------|
-| **語言** | Python 3.10+ | 豐富的 HTTP/JSON 庫，生態成熟 |
-| **排程** | APScheduler / systemd timer | 輕量、定時精確 |
-| **HTTP Client** | requests + httpx | 簡單易用 |
-| **資料庫** | SQLite (本地) | 無需額外服務，適合單機 |
-| **通知** | python-telegram-bot | 官方 API 封裝 |
-| **日誌** | structlog + loguru | 可讀性高 |
+| `SpiderCloudScriptFetcher` | spider.cloud automation_scripts + Chromium | ✅ 主要 |
+| `BrowserlessFetcher` | Browserless.io /function endpoint | ✅ 備案 |
+| `SpiderCloudFetcher` | spider.cloud /scrape POST | ⚠️ 已知 Bug（POST body 被吃掉） |
+| `PlaywrightFetcher` | 本地 Playwright | 🔧 未完整實作 |
 
-### 3.2 專案結構
+**⚠️ POST Bug 說明**：spider.cloud 的 `/scrape` API 不正確支援 `http_method=POST`，
+會把 POST body（`grantee_code=UZ7`）丟失，導致 FCC 搜尋頁回傳空白。
+修復方案：改用 `automation_scripts`（雲端 Chromium 腳本填表單）。
+
+### 3.3 `src/database.py` — SQLite 持久化
+
+- 基於 `FCCRecord` 設計的輕量 CRUD
+- 主要方法：
+  - `filter_new(records)` — 過濾出尚未入庫的記錄
+  - `save_records(records)` — 批次儲存
+  - `get_known_ids(grantee_code)` — 取得已知 ID 集合
+- 檔案路徑：`data/fcc_monitor.db`
+
+### 3.4 `src/pdf_fetcher.py` — Label PDF 下載
+
+兩步驟流程：
+1. 從搜尋結果頁解析出 `application_id`
+2. 爬 Exhibit 列表頁，下載所有描述含 "label" 的 PDF 附件
+
+存儲位置：`data/pdfs/{FCC_ID}/{description}_{att_id}.pdf`
+
+### 3.5 `src/notifier.py` — 通知
+
+- Telegram Bot（HTML 格式）
+- Discord Webhook
+- 訊息以繁體中文為主，有品牌分組和表情符號標示
+
+### 3.6 `src/detector.py` — 變更偵測（進階）
+
+比較兩次抓取結果，產出 `Change` 清單（NEW / REMOVED / STATUS_CHANGED）。
+目前主流程直接用 `database.py` 做 ID 比對，`detector.py` 為進階用途保留。
+
+### 3.7 `src/c2pc_detector.py` — C2PC 偵測
+
+偵測 FCC 申請類型為「Class II Permissive Change」（硬體悄悄升級）的案件，
+比對新舊規格並產生 diff 報告。
+
+---
+
+## 4. 設定管理
+
+### 4.1 主設定檔 `config/settings.yaml`
+
+```yaml
+target_grantees:
+  - name: "Zebra Technologies"
+    codes: ["V2X", "SS4"]
+
+data_source:
+  spidercloud:
+    enabled: true
+    api_key: "${SPIDERCLOUD_API_KEY}"
+
+telegram:
+  bot_token: "..."
+  chat_id: "..."
+```
+
+### 4.2 環境變數
+
+| 變數 | 用途 |
+|------|------|
+| `SPIDERCLOUD_API_KEY` | spider.cloud API 金鑰 |
+| `BROWSERLESS_API_KEY` | Browserless.io 金鑰 |
+
+---
+
+## 5. 執行方式
+
+```bash
+# 單次掃描
+python -m src.main
+
+# 測試模式（不寫 DB，不發通知）
+python -m src.main --dry-run
+
+# 指定抓取策略
+python -m src.main --strategy browserless
+
+# Daemon 模式（每 24 小時一次）
+python -m src.main --daemon --interval-hours 24
+```
+
+---
+
+## 6. 目錄結構
 
 ```
-fcc-monitor/
+fcc-monitoring/
 ├── src/
 │   ├── __init__.py
-│   ├── fetcher.py        # FCC/SpiderCloud API 獲取
-│   ├── parser.py         # 數據解析
-│   ├── detector.py       # 變更偵測
-│   ├── notifier.py       # Telegram 通知
-│   ├── scheduler.py      # 排程主程式
-│   └── config.py         # 配置管理
+│   ├── models.py          # 資料模型（FCCRecord）
+│   ├── config.py          # 設定管理
+│   ├── fetcher.py         # FCC 資料抓取（多策略）
+│   ├── database.py        # SQLite 持久化
+│   ├── pdf_fetcher.py     # Label PDF 下載
+│   ├── notifier.py        # Telegram / Discord 通知
+│   ├── detector.py        # 變更偵測（進階）
+│   ├── scheduler.py       # 雙軌掃描排程（進階）
+│   ├── c2pc_detector.py   # C2PC 偵測
+│   ├── circuit_breaker.py # 爬蟲容錯
+│   └── main.py            # 主入口
 ├── config/
-│   └── settings.yaml     # 配置文件
+│   └── settings.yaml
 ├── data/
-│   └── fcc_monitor.db    # SQLite 數據庫
+│   ├── fcc_monitor.db     # SQLite 資料庫
+│   └── pdfs/              # 下載的 Label PDF
+│       └── {FCC_ID}/
+├── logs/
+│   └── fcc_monitor.log
 ├── docs/
-│   └── architecture.md   # 本文件
-├── tests/
-├── requirements.txt
-└── main.py               # 入口點
+│   └── architecture.md    # 本文件
+├── CLAUDE.md              # AI 作戰簡報（Claude Code 自動讀取）
+└── requirements.txt
 ```
 
-### 3.3 核心腳本說明
+---
 
-| 腳本 | 功能 |
+## 7. 已知限制與待解問題
+
+| 項目 | 說明 |
 |------|------|
-| `fetcher.py` | 調用 SpiderCloud/FCC API 獲取認證數據 |
-| `parser.py` | 解析 FCC 響應，提取關鍵欄位 |
-| `detector.py` | 比對新舊數據，輸出變更清單 |
-| `notifier.py` | 構建並發送 Telegram 訊息 |
-| `scheduler.py` | 封裝 APScheduler，定義每日執行邏輯 |
+| Spider.cloud POST bug | `/scrape` API 不支援表單 POST，已改用 `automation_scripts` |
+| PDF `application_id` 解析 | 依賴 FCC 搜尋結果頁的連結格式，若 FCC 改版需更新 regex |
+| `scheduler.py` 依賴缺失 | 仍 import `brand_db` / `brand_crawlers`（已廢棄層），執行前需移除或重寫 |
+| Browserless 區域 | 預設 `sfo`，可透過 `BROWSERLESS_REGION` 調整 |
 
 ---
 
-## 4. 預估工時
-
-| 階段 | 工作項目 | 工時 (小時) |
-|------|----------|-------------|
-| **1. 基礎建設** | 專案初始化、依賴安裝、配置管理 | 2 |
-| **2. 數據獲取** | FCC API 串接、SpiderCloud 整合（如有） | 4 |
-| **3. 數據處理** | 解析、過濾、數據結構設計 | 3 |
-| **4. 變更偵測** | 差異比對邏輯、SQLite 狀態管理 | 3 |
-| **5. 通知系統** | Telegram Bot 設定、訊息模板 | 2 |
-| **6. 排程與部署** | APScheduler/systemd 整合、測試 | 2 |
-| **7. 測試與優化** | 單元測試、邊界情況處理 | 2 |
-| **合計** | | **18 小時** |
-
-### 工時說明
-- 若 SpiderCloud API 文件完整，可減少 2 小時
-- 若只需監控單一來源，可減少 1 小時
-- 建議預留緩衝：20 小時
-
----
-
-## 5. 部署建議
-
-### 5.1 定時機制選擇
-
-| 方案 | 優點 | 缺點 |
-|------|------|------|
-| **APScheduler (程式內)** | 單一程序，易管理 | 程序掛則停止 |
-| **systemd timer** | 系統級可靠，獨立於程式 | 需 systemd 知識 |
-| **cron** | 簡單萬用 | 精度只到分鐘 |
-
-**推薦**：APScheduler（開發簡單）或 systemd timer（生產環境）
-
-### 5.2 執行時段
-
-- 建議 UTC 14:00-16:00（美國東部時間上午）
-- 可避開 FCC 伺服器維護時段
-
----
-
-## 6. 風險與緩解
-
-| 風險 | 緩解措施 |
-|------|----------|
-| FCC API 變更 | 版本化 API 呼叫，失敗告警 |
-| 頻率限制 | 指數退避重試，指派人為監控 |
-| Telegram 限流 | 批量發送，錯誤重試 |
-| 數據丟失 | 每次同步保留上一份快照 |
-
----
-
-*文檔版本: 1.0*
-*建立日期: 2026-02-24*
+*文檔版本: 2.0 — 2026-03*

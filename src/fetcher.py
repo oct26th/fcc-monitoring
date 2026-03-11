@@ -1,14 +1,17 @@
 """Data fetchers for FCC/SpiderCloud/Browser APIs.
 
 Architecture:
-  SpiderCloudProxy   — Network layer: routes HTTP requests through spider.cloud
-                       to bypass Akamai bot-detection on apps.fcc.gov.
-  SpiderCloudFetcher — Primary fetcher: uses SpiderCloudProxy to scrape the
-                       FCC EAS search page and parse results.
-  BrowserlessFetcher — Secondary fetcher: uses Browserless.io JS execution
-                       as an alternative browser-based scraping path.
-  PlaywrightFetcher  — Tertiary fetcher: local Playwright instance (fallback).
-  get_fetcher()      — Factory; selects strategy from settings or explicit arg.
+  SpiderCloudProxy          — Network layer: routes HTTP requests through spider.cloud
+                              to bypass Akamai bot-detection on apps.fcc.gov.
+  SpiderCloudFetcher        — ⚠️  KNOWN BUG: /scrape API eats POST body (grantee_code
+                              becomes a GET param-less request). Use automation_scripts
+                              path or BrowserlessFetcher instead.
+  SpiderCloudScriptFetcher  — Fixed path: uses spider.cloud /pipeline endpoint with
+                              an automation script to fill and submit the search form.
+  BrowserlessFetcher        — Secondary fetcher: uses Browserless.io JS execution
+                              as an alternative browser-based scraping path.
+  PlaywrightFetcher         — Tertiary fetcher: local Playwright instance (fallback).
+  get_fetcher()             — Factory; selects strategy from settings or explicit arg.
 """
 
 import json
@@ -562,6 +565,151 @@ export default async ({ page, context }) => {
 
 
 # ===========================================================================
+# SpiderCloud Script Fetcher  ─  Fixed POST path via automation_scripts
+# ===========================================================================
+
+class SpiderCloudScriptFetcher(BaseFetcher):
+    """
+    Fetch FCC EAS results using spider.cloud's automation_scripts (pipeline) API.
+
+    WHY THIS EXISTS:
+      SpiderCloudFetcher.post_form() is broken: spider.cloud's /scrape endpoint
+      silently drops the POST body, so grantee_code never reaches apps.fcc.gov.
+
+    HOW THIS WORKS:
+      spider.cloud's /pipeline endpoint accepts a JavaScript automation script
+      that runs inside a managed Chromium instance.  The script navigates to the
+      FCC search page, fills in grantee_code, submits the form, and returns the
+      rendered HTML — preserving the POST semantics at the browser level.
+
+    API reference: https://spider.cloud/docs/automation
+    """
+
+    PIPELINE_ENDPOINT = "https://api.spider.cloud/pipeline"
+
+    # JavaScript automation script executed inside spider.cloud's Chromium.
+    # The placeholder {grantee_code} is replaced at call time.
+    _JS_TEMPLATE = """
+async function run(page) {
+  const searchUrl = 'https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm';
+
+  await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+
+  const title = await page.title();
+  if (title.toLowerCase().includes('access denied')) {
+    throw new Error('Akamai block on initial page load');
+  }
+
+  await page.waitForSelector('input[name="grantee_code"]', { timeout: 15000 });
+  await page.type('input[name="grantee_code"]', '{grantee_code}', { delay: 80 });
+
+  // Set show_records to 500 for maximum results
+  await page.evaluate(() => {
+    const el = document.querySelector('input[name="show_records"]');
+    if (el) el.value = '500';
+  });
+
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }),
+    page.click('input[type="submit"]'),
+  ]);
+
+  return await page.content();
+}
+"""
+
+    def __init__(self):
+        super().__init__()
+        cfg = self.settings.data_source.spidercloud
+        self.api_key = cfg.api_key
+        self.timeout = cfg.timeout
+        self.max_retries = cfg.max_retries
+        if not self.api_key:
+            logger.warning(
+                "[SpiderCloudScriptFetcher] No SPIDERCLOUD_API_KEY — fetcher disabled."
+            )
+
+    def fetch_by_grantee(self, grantee_code: str) -> List[FCCRecord]:
+        if not self.api_key:
+            return []
+
+        logger.info(f"[SpiderCloudScriptFetcher] Fetching grantee: {grantee_code}")
+
+        script = self._JS_TEMPLATE.replace("{grantee_code}", grantee_code)
+
+        payload = {
+            "script": script,
+            "url": "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm",
+            "stealth": True,
+            "proxy_enabled": True,
+        }
+
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                with httpx.Client(timeout=self.timeout) as client:
+                    resp = client.post(
+                        self.PIPELINE_ENDPOINT,
+                        json=payload,
+                        headers={
+                            "Authorization": f"Bearer {self.api_key}",
+                            "Content-Type": "application/json",
+                        },
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+
+                # Extract HTML from response (spider.cloud wraps in list or dict)
+                html = None
+                if isinstance(data, list) and data:
+                    html = data[0].get("content") or data[0].get("html") or ""
+                elif isinstance(data, dict):
+                    html = data.get("content") or data.get("html") or ""
+
+                if not html:
+                    logger.warning(
+                        f"[SpiderCloudScriptFetcher] Empty response for {grantee_code} "
+                        f"(attempt {attempt})"
+                    )
+                    if attempt < self.max_retries:
+                        time.sleep(5 * attempt)
+                    continue
+
+                if _is_akamai_block(html):
+                    logger.warning(
+                        f"[SpiderCloudScriptFetcher] Akamai block for {grantee_code}"
+                    )
+                    return []
+
+                records = _parse_fcc_search_html(html, grantee_code)
+                logger.info(
+                    f"[SpiderCloudScriptFetcher] Parsed {len(records)} records "
+                    f"for {grantee_code}"
+                )
+                return records
+
+            except httpx.HTTPStatusError as exc:
+                logger.warning(
+                    f"[SpiderCloudScriptFetcher] HTTP {exc.response.status_code} "
+                    f"on attempt {attempt}/{self.max_retries}"
+                )
+                if exc.response.status_code in (429, 503) and attempt < self.max_retries:
+                    time.sleep(5 * attempt)
+                    continue
+                return []
+
+            except httpx.RequestError as exc:
+                logger.warning(
+                    f"[SpiderCloudScriptFetcher] Request error attempt "
+                    f"{attempt}/{self.max_retries}: {exc}"
+                )
+                if attempt < self.max_retries:
+                    time.sleep(5 * attempt)
+                continue
+
+        return []
+
+
+# ===========================================================================
 # Playwright Fetcher  ─  Tertiary (local browser fallback)
 # ===========================================================================
 
@@ -602,6 +750,10 @@ def get_fetcher(strategy: Optional[str] = None) -> BaseFetcher:
     logger.info(f"[get_fetcher] Using strategy: {strategy}")
 
     if strategy == "spidercloud":
+        # Use the automation_scripts path to avoid the POST-body bug in /scrape
+        return SpiderCloudScriptFetcher()
+    elif strategy == "spidercloud_legacy":
+        # Original /scrape path — kept for reference but broken for POST forms
         return SpiderCloudFetcher()
     elif strategy == "browserless":
         return BrowserlessFetcher()
