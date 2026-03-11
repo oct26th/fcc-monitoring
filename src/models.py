@@ -18,6 +18,7 @@ class FCCRecord:
     status: str = "Granted"
     application_type: str = ""
     expires_on: Optional[str] = None
+    application_id: Optional[str] = None   # FCC application_id (for PDF/exhibit lookup)
 
     def __hash__(self):
         return hash(self.fcc_id)
