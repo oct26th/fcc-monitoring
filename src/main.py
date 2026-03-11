@@ -17,6 +17,7 @@ Flow per grantee code:
 import argparse
 import sys
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from loguru import logger
@@ -27,6 +28,27 @@ from .fetcher import get_fetcher
 from .models import FCCRecord
 from .notifier import Notifier
 from .pdf_fetcher import PDFFetcher
+
+
+def _parse_fcc_date(date_str: str) -> datetime | None:
+    """Parse common FCC date formats (MM/DD/YYYY or YYYY-MM-DD)."""
+    for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%m-%d-%Y"):
+        try:
+            return datetime.strptime(date_str.strip(), fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+    return None
+
+
+def _within_days(record: FCCRecord, days: int) -> bool:
+    """Return True if record's grant_date or filing_date is within the last N days."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    for field in (record.grant_date, record.filing_date):
+        if field:
+            dt = _parse_fcc_date(field)
+            if dt and dt >= cutoff:
+                return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -46,7 +68,7 @@ def _configure_logging(level: str, log_file: str):
 # Core scan logic
 # ---------------------------------------------------------------------------
 
-def run_scan(dry_run: bool = False) -> dict:
+def run_scan(dry_run: bool = False, since_days: int | None = None) -> dict:
     """
     Execute one full monitoring scan across all configured grantee codes.
 
@@ -89,30 +111,44 @@ def run_scan(dry_run: bool = False) -> dict:
                 # 2. Filter to find genuinely new records
                 new_records = db.filter_new(current_records)
 
+                # On first run the DB is empty; limit notifications to recent
+                # records only (--since-days window).  All records are still
+                # saved to DB so subsequent runs have a baseline.
+                notify_records = new_records
+                if since_days is not None and new_records:
+                    notify_records = [r for r in new_records if _within_days(r, since_days)]
+                    skipped = len(new_records) - len(notify_records)
+                    if skipped:
+                        logger.info(
+                            f"[since-days={since_days}] Suppressing {skipped} older "
+                            f"record(s) for {grantee_code} (outside window)"
+                        )
+
                 summary[grantee_code] = {
                     "fetched": len(current_records),
                     "new": len(new_records),
+                    "notify": len(notify_records),
                 }
 
-                if not new_records:
+                if not notify_records:
                     logger.info(f"No new records for {grantee_code}")
                     continue
 
                 logger.info(
-                    f"🆕 {len(new_records)} new record(s) for {grantee_code}: "
-                    + ", ".join(r.fcc_id for r in new_records[:5])
-                    + ("..." if len(new_records) > 5 else "")
+                    f"🆕 {len(notify_records)} record(s) to notify for {grantee_code}: "
+                    + ", ".join(r.fcc_id for r in notify_records[:5])
+                    + ("..." if len(notify_records) > 5 else "")
                 )
 
                 # 3a. Download Label PDFs for each new FCC ID
-                for record in new_records:
+                for record in notify_records:
                     if dry_run:
                         logger.info(
                             f"[dry-run] Would download PDF for {record.fcc_id}"
                         )
                         continue
 
-                    pdfs = pdf_fetcher.fetch_label_pdfs(record.fcc_id)
+                    pdfs = pdf_fetcher.fetch_label_pdfs(record.fcc_id, record.application_id)
                     if pdfs:
                         logger.info(
                             f"📄 Downloaded {len(pdfs)} PDF(s) for {record.fcc_id}: "
@@ -125,9 +161,10 @@ def run_scan(dry_run: bool = False) -> dict:
                             f"No Label PDFs found for {record.fcc_id}"
                         )
 
-                all_new_records.extend(new_records)
+                all_new_records.extend(notify_records)
 
-                # 3b. Persist new records to DB
+                # 3b. Persist ALL new records to DB (not just notify window,
+                #     so next run has a complete baseline).
                 if not dry_run:
                     saved = db.save_records(new_records)
                     logger.info(f"Saved {saved} records to DB for {grantee_code}")
@@ -181,6 +218,14 @@ def _parse_args() -> argparse.Namespace:
         help="Fetch and detect changes but do not write to DB or send notifications",
     )
     parser.add_argument(
+        "--since-days",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Only notify about records with grant/filing date within last N days "
+             "(useful on first run when DB is empty; all records are still saved)",
+    )
+    parser.add_argument(
         "--strategy",
         choices=["spidercloud", "browserless", "playwright", "spidercloud_legacy"],
         default=None,
@@ -211,14 +256,14 @@ def main():
         logger.info(f"Daemon mode: scanning every {args.interval_hours}h")
         while True:
             try:
-                summary = run_scan(dry_run=args.dry_run)
+                summary = run_scan(dry_run=args.dry_run, since_days=args.since_days)
                 logger.info(f"Scan summary: {summary}")
             except Exception:
                 logger.exception("Unhandled error during scan — will retry next interval")
             logger.info(f"Sleeping {args.interval_hours}h until next scan…")
             time.sleep(interval_s)
     else:
-        summary = run_scan(dry_run=args.dry_run)
+        summary = run_scan(dry_run=args.dry_run, since_days=args.since_days)
         logger.info(f"Scan complete. Summary: {summary}")
 
 
