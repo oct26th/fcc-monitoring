@@ -591,29 +591,28 @@ export default async ({ page, context }) => {
 
 
 # ===========================================================================
-# SpiderCloud Script Fetcher  ─  Fixed POST path via CDP cloud browser
+# SpiderCloud Script Fetcher  ─  Fixed POST path via execution_scripts
 # ===========================================================================
 
 class SpiderCloudScriptFetcher(BaseFetcher):
     """
-    Fetch FCC EAS results by connecting Playwright to spider.cloud's CDP cloud browser.
+    Fetch FCC EAS results using spider.cloud's execution_scripts parameter.
 
     WHY THIS EXISTS:
       SpiderCloudFetcher.post_form() is broken: spider.cloud's /scrape endpoint
       silently drops the POST body, so grantee_code never reaches apps.fcc.gov.
 
     HOW THIS WORKS:
-      spider.cloud exposes a full cloud Chromium browser over a CDP WebSocket at
-        wss://browser.spider.cloud/v1/browser?token=<API_KEY>
-      We connect Playwright via connect_over_cdp(), navigate to the FCC search
-      page, fill in grantee_code, submit the form, and parse the resulting HTML.
-      The browser runs inside spider.cloud's infrastructure with built-in stealth
-      and proxy rotation — so Akamai Bot Manager is bypassed transparently.
+      spider.cloud's /scrape endpoint supports an `execution_scripts` parameter —
+      a dict mapping URL → JS string.  The JS runs inside spider.cloud's managed
+      Chrome after the page loads, fills in the grantee_code field, and submits
+      the form.  Spider captures the resulting page HTML and returns it.
+      No local Playwright or CDP connection required; pure httpx POST.
 
-    API reference: https://spider.cloud/docs/api  (see "Cloud Browser / CDP" section)
+    API reference: https://spider.cloud/guides/crawling-authenticated-pages
     """
 
-    CDP_WS_URL = "wss://browser.spider.cloud/v1/browser"
+    SCRAPE_ENDPOINT = "https://api.spider.cloud/scrape"
     FCC_SEARCH_URL = "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm"
 
     def __init__(self):
@@ -635,7 +634,16 @@ class SpiderCloudScriptFetcher(BaseFetcher):
 
         for attempt in range(1, self.max_retries + 1):
             try:
-                html = self._fetch_via_cdp(grantee_code)
+                html = self._fetch_via_execution_scripts(grantee_code)
+            except httpx.HTTPStatusError as exc:
+                logger.warning(
+                    f"[SpiderCloudScriptFetcher] HTTP {exc.response.status_code} "
+                    f"on attempt {attempt}/{self.max_retries}"
+                )
+                if exc.response.status_code in (429, 503) and attempt < self.max_retries:
+                    time.sleep(5 * attempt)
+                    continue
+                return []
             except Exception as exc:
                 logger.warning(
                     f"[SpiderCloudScriptFetcher] Attempt {attempt}/{self.max_retries} "
@@ -669,42 +677,44 @@ class SpiderCloudScriptFetcher(BaseFetcher):
 
         return []
 
-    def _fetch_via_cdp(self, grantee_code: str) -> Optional[str]:
-        """Connect to spider.cloud CDP browser, fill FCC form, return page HTML."""
-        from playwright.sync_api import sync_playwright
+    def _fetch_via_execution_scripts(self, grantee_code: str) -> Optional[str]:
+        """POST to spider.cloud /scrape with execution_scripts to fill and submit the FCC form."""
+        js = (
+            "document.addEventListener('DOMContentLoaded', function() {"
+            f"  var gc = document.querySelector('input[name=\"grantee_code\"]');"
+            f"  if (gc) gc.value = '{grantee_code}';"
+            "  var sr = document.querySelector('input[name=\"show_records\"]');"
+            "  if (sr) sr.value = '500';"
+            "  var btn = document.querySelector('input[type=\"submit\"]');"
+            "  if (btn) btn.click();"
+            "});"
+        )
+        payload = {
+            "url": self.FCC_SEARCH_URL,
+            "request": "chrome",
+            "execution_scripts": {self.FCC_SEARCH_URL: js},
+            "return_format": "html",
+            "stealth": 1,
+            "proxy_enabled": True,
+            "anti_bot": True,
+        }
+        with httpx.Client(timeout=self.timeout) as client:
+            resp = client.post(
+                self.SCRAPE_ENDPOINT,
+                json=payload,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
 
-        cdp_url = f"{self.CDP_WS_URL}?token={self.api_key}"
-        nav_timeout = int(self.timeout * 1000)  # Playwright uses ms
-
-        with sync_playwright() as pw:
-            browser = pw.chromium.connect_over_cdp(cdp_url, timeout=nav_timeout)
-            try:
-                context = browser.new_context(
-                    user_agent=(
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                        "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/120.0.0.0 Safari/537.36"
-                    ),
-                    viewport={"width": 1280, "height": 800},
-                )
-                page = context.new_page()
-
-                page.goto(self.FCC_SEARCH_URL, wait_until="networkidle", timeout=nav_timeout)
-
-                title = page.title()
-                if "access denied" in title.lower():
-                    raise RuntimeError("Akamai block on initial page load")
-
-                page.wait_for_selector('input[name="grantee_code"]', timeout=15000)
-                page.fill('input[name="grantee_code"]', grantee_code)
-                page.fill('input[name="show_records"]', "500")
-
-                page.click('input[type="submit"]')
-                page.wait_for_load_state("networkidle", timeout=nav_timeout)
-
-                return page.content()
-            finally:
-                browser.close()
+        if isinstance(data, list) and data:
+            return data[0].get("content") or data[0].get("html") or ""
+        if isinstance(data, dict):
+            return data.get("content") or data.get("html") or ""
+        return None
 
 
 # ===========================================================================
