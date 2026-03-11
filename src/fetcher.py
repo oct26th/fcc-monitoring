@@ -374,7 +374,8 @@ def _parse_fcc_search_html(html: str, grantee_code: str) -> List[FCCRecord]:
 
         # Parse data rows
         for row_html in rows[1:]:
-            cells = [strip_tags(c) for c in cell_pattern.findall(row_html)]
+            raw_cells = cell_pattern.findall(row_html)   # keep raw HTML for link extraction
+            cells = [strip_tags(c) for c in raw_cells]
             if len(cells) < 3:
                 continue
 
@@ -390,6 +391,21 @@ def _parse_fcc_search_html(html: str, grantee_code: str) -> List[FCCRecord]:
 
             product_code = fcc_id[len(grantee_code):]
 
+            # Extract application_id from the href in the FCC ID cell.
+            # FCC search results link each ID to ViewGrantApplication.cfm with
+            # application_id=<base64> in the query string.
+            application_id: Optional[str] = None
+            fcc_id_col = col.get("fcc_id")
+            if fcc_id_col is not None and fcc_id_col < len(raw_cells):
+                m = re.search(
+                    r"application_id=([A-Za-z0-9+/%=]+)",
+                    raw_cells[fcc_id_col],
+                    re.IGNORECASE,
+                )
+                if m:
+                    from urllib.parse import unquote
+                    application_id = unquote(m.group(1))
+
             # Format location into applicant_name
             city  = get("city")
             state = get("state")
@@ -400,15 +416,16 @@ def _parse_fcc_search_html(html: str, grantee_code: str) -> List[FCCRecord]:
                 name = f"{name} ({location})"
 
             records.append(FCCRecord(
-                fcc_id           = fcc_id,
-                grantee_code     = grantee_code,
-                product_code     = product_code,
-                applicant_name   = name,
+                fcc_id              = fcc_id,
+                grantee_code        = grantee_code,
+                product_code        = product_code,
+                applicant_name      = name,
                 product_description = get("product_desc"),
-                grant_date       = get("grant_date"),
-                filing_date      = get("filing_date"),
-                application_type = get("app_type"),
-                status           = "Granted",
+                grant_date          = get("grant_date"),
+                filing_date         = get("filing_date"),
+                application_type    = get("app_type"),
+                status              = "Granted",
+                application_id      = application_id,
             ))
 
     return records
@@ -487,6 +504,14 @@ export default async ({ page, context }) => {
         for (const [key, idx] of Object.entries(colMap)) {
           if (cells[idx]) rect[key] = cells[idx].innerText.trim();
         }
+        // Extract application_id from the FCC ID cell's <a href>
+        if (colMap.fcc_id !== undefined && cells[colMap.fcc_id]) {
+          const link = cells[colMap.fcc_id].querySelector('a');
+          if (link) {
+            const m = link.href.match(/application_id=([^&]+)/i);
+            if (m) rect.application_id = decodeURIComponent(m[1]);
+          }
+        }
         return rect;
       }).filter(r => r && r.fcc_id);
       return { records };
@@ -557,6 +582,7 @@ export default async ({ page, context }) => {
                         grant_date          = item.get("grant_date", ""),
                         filing_date         = item.get("filing_date", ""),
                         application_type    = item.get("app_type", ""),
+                        application_id      = item.get("application_id"),
                     ))
                 return records
         except Exception as e:
