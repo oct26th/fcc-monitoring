@@ -133,10 +133,9 @@ class SpiderCloudProxy:
         payload: Dict[str, Any] = {
             "url":           url,
             "return_format": return_format,
-            "stealth":       1 if self.stealth else 0,
+            "request":       "chrome",
+            "stealth":       True if self.stealth else False,
             "proxy_enabled": self.proxy_enabled,
-            "render_js":     self.render_js,
-            "anti_bot":      True,          # explicit Akamai/Cloudflare bypass
         }
         if post_body is not None:
             payload["http_method"] = "POST"
