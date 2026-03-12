@@ -2,22 +2,26 @@
 
 # Target companies to monitor (Grantee Codes)
 target_grantees:
-  - name: "CipherLab"
+  - name: "Zebra"
     codes: ["UZ7"]
   - name: "Honeywell"
     codes: ["HD5"]
-  - name: "Motorola Solutions"
+  - name: "Datalogic"
     codes: ["U4F", "U4G"]
-  - name: "Zebra Technologies"
-    codes: ["V2X", "SS4"]
-  - name: "Symbol Technologies"
-    codes: ["HLE"]
+  - name: "Point Mobile"
+    codes: ["V2X"]
+  - name: "Bluebird"
+    codes: ["SS4"]
   - name: "Unitech"
+    codes: ["HLE"]
+  - name: "Proglove"
     codes: ["2AOJL"]
-  - name: "iData"
+  - name: "Chainway"
     codes: ["2AC6A"]
-  - name: "Newland"
+  - name: "Fujian Newland"
     codes: ["2AR9L"]
+  - name: "Generalscan"
+    codes: ["2ADNT"]
 
 # Data source configuration
 data_source:

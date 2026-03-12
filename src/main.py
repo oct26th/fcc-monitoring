@@ -51,6 +51,16 @@ def _within_days(record: FCCRecord, days: int) -> bool:
     return False
 
 
+def _after_date(record: FCCRecord, cutoff: datetime) -> bool:
+    """Return True if record's grant_date or filing_date is on or after cutoff."""
+    for field in (record.grant_date, record.filing_date):
+        if field:
+            dt = _parse_fcc_date(field)
+            if dt and dt >= cutoff:
+                return True
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Logging setup
 # ---------------------------------------------------------------------------
@@ -68,10 +78,18 @@ def _configure_logging(level: str, log_file: str):
 # Core scan logic
 # ---------------------------------------------------------------------------
 
-def run_scan(dry_run: bool = False, since_days: int | None = None, strategy: str | None = None) -> dict:
+def run_scan(
+    dry_run: bool = False,
+    seed: bool = False,
+    since_days: int | None = None,
+    since_date: datetime | None = None,
+    strategy: str | None = None,
+) -> dict:
     """
     Execute one full monitoring scan across all configured grantee codes.
 
+    seed=True: write to DB but send no notifications (used for initial DB population).
+    since_date: only save/notify records on or after this date (seed mode filter).
     Returns a summary dict with counts per grantee.
     """
     settings = get_settings()
@@ -90,9 +108,7 @@ def run_scan(dry_run: bool = False, since_days: int | None = None, strategy: str
     try:
         for target in settings.target_grantees:
             for grantee_code in target.codes:
-                logger.info(
-                    f"── Scanning {target.name} / {grantee_code} ──"
-                )
+                logger.info(f"── Scanning {target.name} / {grantee_code} ──")
 
                 # 1. Fetch current records from FCC
                 current_records = fetcher.fetch_by_grantee(grantee_code)
@@ -104,16 +120,23 @@ def run_scan(dry_run: bool = False, since_days: int | None = None, strategy: str
                     summary[grantee_code] = {"fetched": 0, "new": 0}
                     continue
 
-                logger.info(
-                    f"Fetched {len(current_records)} records for {grantee_code}"
-                )
+                logger.info(f"Fetched {len(current_records)} records for {grantee_code}")
 
                 # 2. Filter to find genuinely new records
                 new_records = db.filter_new(current_records)
 
-                # On first run the DB is empty; limit notifications to recent
-                # records only (--since-days window).  All records are still
-                # saved to DB so subsequent runs have a baseline.
+                # Apply date cutoff (--since-date) — limits what gets saved in seed mode
+                if since_date is not None and new_records:
+                    filtered = [r for r in new_records if _after_date(r, since_date)]
+                    skipped = len(new_records) - len(filtered)
+                    if skipped:
+                        logger.info(
+                            f"[since-date] Skipping {skipped} record(s) before "
+                            f"{since_date.date()} for {grantee_code}"
+                        )
+                    new_records = filtered
+
+                # Determine which records to notify about
                 notify_records = new_records
                 if since_days is not None and new_records:
                     notify_records = [r for r in new_records if _within_days(r, since_days)]
@@ -127,8 +150,20 @@ def run_scan(dry_run: bool = False, since_days: int | None = None, strategy: str
                 summary[grantee_code] = {
                     "fetched": len(current_records),
                     "new": len(new_records),
-                    "notify": len(notify_records),
+                    "notify": 0 if seed else len(notify_records),
                 }
+
+                # 3. Persist new records to DB
+                if not dry_run and new_records:
+                    saved = db.save_records(new_records)
+                    logger.info(f"Saved {saved} record(s) to DB for {grantee_code}")
+                elif dry_run and new_records:
+                    logger.info(f"[dry-run] Would save {len(new_records)} record(s) to DB")
+
+                # Seed mode: no notifications, move on
+                if seed:
+                    logger.info(f"[seed] {len(new_records)} record(s) saved, no notification sent")
+                    continue
 
                 if not notify_records:
                     logger.info(f"No new records for {grantee_code}")
@@ -140,12 +175,10 @@ def run_scan(dry_run: bool = False, since_days: int | None = None, strategy: str
                     + ("..." if len(notify_records) > 5 else "")
                 )
 
-                # 3a. Download Label PDFs for each new FCC ID
+                # 4a. Download Label PDFs and send to Telegram
                 for record in notify_records:
                     if dry_run:
-                        logger.info(
-                            f"[dry-run] Would download PDF for {record.fcc_id}"
-                        )
+                        logger.info(f"[dry-run] Would download PDF for {record.fcc_id}")
                         continue
 
                     pdfs = pdf_fetcher.fetch_label_pdfs(record.fcc_id, record.application_id)
@@ -156,34 +189,19 @@ def run_scan(dry_run: bool = False, since_days: int | None = None, strategy: str
                         )
                         summary[grantee_code].setdefault("pdfs_downloaded", 0)
                         summary[grantee_code]["pdfs_downloaded"] += len(pdfs)
-                        # Send each PDF directly to Telegram
                         for pdf_path in pdfs:
                             notifier.send_telegram_document(
                                 pdf_path,
                                 caption=f"📄 {record.fcc_id} Label PDF",
                             )
                     else:
-                        logger.warning(
-                            f"No Label PDFs found for {record.fcc_id}"
-                        )
+                        logger.warning(f"No Label PDFs found for {record.fcc_id}")
 
                 all_new_records.extend(notify_records)
 
-                # 3b. Persist ALL new records to DB (not just notify window,
-                #     so next run has a complete baseline).
-                if not dry_run:
-                    saved = db.save_records(new_records)
-                    logger.info(f"Saved {saved} records to DB for {grantee_code}")
-                else:
-                    logger.info(
-                        f"[dry-run] Would save {len(new_records)} records to DB"
-                    )
-
-        # 4. Send grouped notification for all new records across all grantees
+        # 4b. Send grouped Telegram/Discord notification
         if all_new_records:
-            logger.info(
-                f"📡 Sending notification: {len(all_new_records)} new record(s) total"
-            )
+            logger.info(f"📡 Sending notification: {len(all_new_records)} new record(s) total")
             if not dry_run:
                 notifier.notify_new_records(all_new_records)
             else:
@@ -224,6 +242,18 @@ def _parse_args() -> argparse.Namespace:
         help="Fetch and detect changes but do not write to DB or send notifications",
     )
     parser.add_argument(
+        "--seed",
+        action="store_true",
+        help="Populate DB with existing records (no notifications). Use with --since-date.",
+    )
+    parser.add_argument(
+        "--since-date",
+        type=str,
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="Only save/notify records on or after this date (e.g. 2023-01-01)",
+    )
+    parser.add_argument(
         "--since-days",
         type=int,
         default=None,
@@ -250,26 +280,46 @@ def main():
     logger.info("FCC Monitor starting")
     if args.dry_run:
         logger.info("*** DRY-RUN MODE — no DB writes, no notifications ***")
+    if args.seed:
+        logger.info("*** SEED MODE — writing to DB, no notifications ***")
     logger.info("=" * 60)
+
+    # Parse --since-date
+    since_date: datetime | None = None
+    if args.since_date:
+        try:
+            since_date = datetime.strptime(args.since_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            logger.info(f"Date filter: records on or after {args.since_date}")
+        except ValueError:
+            logger.error(f"Invalid --since-date format: {args.since_date!r} (expected YYYY-MM-DD)")
+            sys.exit(1)
 
     # Override fetcher strategy if requested
     if args.strategy:
         import os
         os.environ["FCC_FETCHER_STRATEGY"] = args.strategy
 
+    scan_kwargs = dict(
+        dry_run=args.dry_run,
+        seed=args.seed,
+        since_days=args.since_days,
+        since_date=since_date,
+        strategy=args.strategy,
+    )
+
     if args.daemon:
         interval_s = args.interval_hours * 3600
         logger.info(f"Daemon mode: scanning every {args.interval_hours}h")
         while True:
             try:
-                summary = run_scan(dry_run=args.dry_run, since_days=args.since_days, strategy=args.strategy)
+                summary = run_scan(**scan_kwargs)
                 logger.info(f"Scan summary: {summary}")
             except Exception:
                 logger.exception("Unhandled error during scan — will retry next interval")
             logger.info(f"Sleeping {args.interval_hours}h until next scan…")
             time.sleep(interval_s)
     else:
-        summary = run_scan(dry_run=args.dry_run, since_days=args.since_days, strategy=args.strategy)
+        summary = run_scan(**scan_kwargs)
         logger.info(f"Scan complete. Summary: {summary}")
 
 

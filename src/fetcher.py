@@ -506,7 +506,7 @@ export default async ({ page, context }) => {
         // Extract application_id from anywhere in the row (it lives in link cells, not the FCC ID cell)
         {
           const rowHtml = row.outerHTML;
-          const om = rowHtml.match(/application_id=([^&\s"]+)/i);
+          const om = rowHtml.match(/application_id=([^&\\s"]+)/i);
           if (om) rect.application_id = decodeURIComponent(om[1]);
         }
         return rect;
