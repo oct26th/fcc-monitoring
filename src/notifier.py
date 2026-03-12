@@ -10,6 +10,24 @@ from loguru import logger
 
 from .models import FCCRecord
 
+_C2PC_KEYWORDS = {"class ii permissive change", "class ii", "c2pc", "permissive change"}
+
+def _is_c2pc(application_type: Optional[str]) -> bool:
+    if not application_type:
+        return False
+    t = application_type.lower()
+    return any(k in t for k in _C2PC_KEYWORDS)
+
+def _fmt_date(date_str: str) -> str:
+    """Normalize MM/DD/YYYY → YYYY-MM-DD, leave other formats as-is."""
+    if not date_str:
+        return ""
+    parts = date_str.split("/")
+    if len(parts) == 3 and len(parts[2]) == 4:
+        return f"{parts[2]}-{parts[0].zfill(2)}-{parts[1].zfill(2)}"
+    return date_str
+
+
 class Notifier:
     """Sends notifications via Telegram and Discord."""
     
@@ -110,68 +128,57 @@ class Notifier:
             
         return False
 
-    def notify_new_records(self, new_records: List[FCCRecord]):
-        """Format and send notification for new FCC records, grouped by grantee."""
+    def notify_new_records(
+        self,
+        new_records: List[FCCRecord],
+        brand_names: Optional[dict] = None,
+    ):
+        """Format and send notification for new FCC records, grouped by grantee.
+
+        brand_names: dict mapping grantee_code -> brand name from settings.
+        """
         if not new_records:
             return
-            
-        count = len(new_records)
-        msg = f"📡 <b>NERV FCC Monitor - 新型號授權回報</b>\n"
-        msg += f"偵測到 {count} 筆新紀錄，摘要如下：\n\n"
-        
-        # Group records by grantee code
-        grouped: dict[str, List[FCCRecord]] = {}
-        for r in new_records:
-            code = r.grantee_code
-            if code not in grouped:
-                grouped[code] = []
-            grouped[code].append(r)
-            
-        brand_map = {
-            "Datalogic S.r.l.": "Datalogic",
-            "Unitech Electronics Co., Ltd.": "Unitech",
-            "Honeywell International Inc": "Honeywell",
-            "Honeywell International Inc.": "Honeywell",
-            "Zebra Technologies Corporation": "Zebra",
-            "Symbol Technologies Inc": "Symbol",
-            "Motorola Solutions, Inc.": "Motorola",
-            "CipherLab Co., Ltd.": "CipherLab",
-            "Honeywell Safety and Productivity Solutions": "Honeywell",
-            "CipherLab Co Ltd": "CipherLab",
-            "Point Mobile Co., LTD.": "Point Mobile",
-        }
 
-        # Build the message grouped by brand
-        for code, records in grouped.items():
-            # Get clean brand name from first record
-            raw_brand = records[0].applicant_name.split('(')[0].strip()
-            brand_name = brand_map.get(raw_brand, raw_brand.split(' ')[0])
-            
-            # Ultimate format: 🏢 CODE (Brand Name)
-            msg += f"🏢 {code} ({brand_name})\n"
-            
-            for r in records[:20]: # Show up to 20 per brand
-                # Use application type or description
-                type_info = r.application_type if r.application_type else r.product_description
-                if not type_info: type_info = "New Filing"
-                
-                # Truncate if too long
-                if len(type_info) > 30:
-                    type_info = type_info[:27] + ".."
-                
-                # Try to normalize date to YYYY/MM/DD if it's MM/DD/YYYY
-                date_str = r.grant_date
-                if '/' in date_str and len(date_str) == 10:
-                    parts = date_str.split('/')
-                    if len(parts[2]) == 4: # MM/DD/YYYY -> YYYY/MM/DD
-                        date_str = f"{parts[2]}/{parts[0]}/{parts[1]}"
-                
-                msg += f"- {r.fcc_id} ({type_info}) - {date_str}\n"
-            msg += "\n"
-            
-        if count > 20:
-            msg += f"... 總計 {count} 筆新機情報已入庫。"
-            
+        brand_names = brand_names or {}
+
+        # Separate C2PC from brand-new filings
+        c2pc_records = [r for r in new_records if _is_c2pc(r.application_type)]
+        new_filings  = [r for r in new_records if not _is_c2pc(r.application_type)]
+
+        # Group by grantee code
+        def _group(records):
+            grouped: dict[str, List[FCCRecord]] = {}
+            for r in records:
+                grouped.setdefault(r.grantee_code, []).append(r)
+            return grouped
+
+        lines = []
+
+        if new_filings:
+            lines.append(f"📡 <b>FCC 新申請</b> — {len(new_filings)} 筆\n")
+            for code, records in _group(new_filings).items():
+                brand = brand_names.get(code, code)
+                lines.append(f"🏢 <b>{brand}</b> ({code})")
+                for r in records[:20]:
+                    name = r.product_name or r.product_description or ""
+                    date = _fmt_date(r.grant_date or r.filing_date or "")
+                    app_type = r.application_type or "New Filing"
+                    lines.append(f"  • <code>{r.fcc_id}</code>  {name}  [{app_type}]  {date}")
+                lines.append("")
+
+        if c2pc_records:
+            lines.append(f"⚠️ <b>C2PC 變更偵測</b> — {len(c2pc_records)} 筆\n")
+            for code, records in _group(c2pc_records).items():
+                brand = brand_names.get(code, code)
+                lines.append(f"🏢 <b>{brand}</b> ({code})")
+                for r in records[:20]:
+                    name = r.product_name or r.product_description or ""
+                    date = _fmt_date(r.grant_date or r.filing_date or "")
+                    lines.append(f"  ⚡ <code>{r.fcc_id}</code>  {name}  {date}")
+                lines.append("")
+
+        msg = "\n".join(lines).rstrip()
         self.send_telegram(msg)
         self.send_discord(msg)
 

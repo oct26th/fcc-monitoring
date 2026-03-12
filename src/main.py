@@ -102,6 +102,13 @@ def run_scan(
         discord_webhook=settings.discord.webhook_url,
     )
 
+    # Build grantee_code -> brand name lookup from settings
+    brand_names: dict[str, str] = {
+        code: target.name
+        for target in settings.target_grantees
+        for code in target.codes
+    }
+
     all_new_records: list[FCCRecord] = []
     summary: dict = {}
 
@@ -203,7 +210,7 @@ def run_scan(
         if all_new_records:
             logger.info(f"📡 Sending notification: {len(all_new_records)} new record(s) total")
             if not dry_run:
-                notifier.notify_new_records(all_new_records)
+                notifier.notify_new_records(all_new_records, brand_names=brand_names)
             else:
                 logger.info("[dry-run] Notification skipped")
         else:
