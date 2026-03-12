@@ -194,13 +194,15 @@ class Notifier:
             f'🔗 <a href="{fcc_url}">FCC 查詢</a>'
         )
 
+        # 永遠先發送純文字訊息 (確保文字在上方)
+        self.send_telegram(msg)
+
+        # 接著發送 PDF 附件 (讓檔案顯示在文字下方)
         if pdfs:
             if len(pdfs) == 1:
-                self.send_telegram_document(pdfs[0], caption=msg)
+                self.send_telegram_document(pdfs[0], caption="")
             else:
-                self.send_telegram_media_group(pdfs, caption=msg)
-        else:
-            self.send_telegram(msg)
+                self.send_telegram_media_group(pdfs, caption="")
 
         # Discord: plain text only (strip HTML tags)
         discord_msg = (
