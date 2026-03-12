@@ -503,13 +503,11 @@ export default async ({ page, context }) => {
         for (const [key, idx] of Object.entries(colMap)) {
           if (cells[idx]) rect[key] = cells[idx].innerText.trim();
         }
-        // Extract application_id from the FCC ID cell's <a href>
-        if (colMap.fcc_id !== undefined && cells[colMap.fcc_id]) {
-          const link = cells[colMap.fcc_id].querySelector('a');
-          if (link) {
-            const m = link.href.match(/application_id=([^&]+)/i);
-            if (m) rect.application_id = decodeURIComponent(m[1]);
-          }
+        // Extract application_id from anywhere in the row (it lives in link cells, not the FCC ID cell)
+        {
+          const rowHtml = row.outerHTML;
+          const om = rowHtml.match(/application_id=([^&\s"]+)/i);
+          if (om) rect.application_id = decodeURIComponent(om[1]);
         }
         return rect;
       }).filter(r => r && r.fcc_id);

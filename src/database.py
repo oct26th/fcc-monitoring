@@ -83,12 +83,18 @@ class Database:
         return {r["fcc_id"] for r in rows}
 
     def filter_new(self, records: list[FCCRecord]) -> list[FCCRecord]:
-        """Return only records whose fcc_id is NOT yet in the database."""
+        """Return only records whose fcc_id is NOT yet in the database, deduplicated."""
         if not records:
             return []
         grantee_code = records[0].grantee_code
         known = self.get_known_ids(grantee_code)
-        new = [r for r in records if r.fcc_id not in known]
+        # Deduplicate by fcc_id (FCC search results may contain same ID multiple times)
+        seen: set[str] = set()
+        new: list[FCCRecord] = []
+        for r in records:
+            if r.fcc_id not in known and r.fcc_id not in seen:
+                seen.add(r.fcc_id)
+                new.append(r)
         logger.info(
             f"[DB] {grantee_code}: {len(records)} fetched, "
             f"{len(known)} known, {len(new)} new"
@@ -166,3 +172,79 @@ class Database:
                 (grantee_code,),
             ).fetchone()[0]
         return conn.execute("SELECT COUNT(*) FROM fcc_records").fetchone()[0]
+
+    def save_record(self, record: FCCRecord) -> bool:
+        """
+        Save a single record. Returns True if it's new, False if it already existed.
+        Updates mutable fields (status, product_description) on existing records.
+        """
+        conn = self._connect()
+        existing = conn.execute(
+            "SELECT fcc_id FROM fcc_records WHERE fcc_id = ?", (record.fcc_id,)
+        ).fetchone()
+
+        now = datetime.now(timezone.utc).isoformat()
+        if existing is None:
+            conn.execute(
+                """
+                INSERT INTO fcc_records (
+                    fcc_id, grantee_code, product_code, applicant_name,
+                    product_name, product_description, certification_date,
+                    grant_date, filing_date, status, application_type,
+                    expires_on, received_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    record.fcc_id, record.grantee_code, record.product_code,
+                    record.applicant_name, record.product_name, record.product_description,
+                    record.certification_date, record.grant_date, record.filing_date,
+                    record.status, record.application_type, record.expires_on, now,
+                ),
+            )
+            conn.commit()
+            return True
+        else:
+            conn.execute(
+                """
+                UPDATE fcc_records
+                SET status = ?, product_description = ?, product_name = ?
+                WHERE fcc_id = ?
+                """,
+                (record.status, record.product_description, record.product_name, record.fcc_id),
+            )
+            conn.commit()
+            return False
+
+    def get_latest_records(self, limit: int = 50, grantee_code: Optional[str] = None) -> list[FCCRecord]:
+        """Return the most recently received records, newest first."""
+        conn = self._connect()
+        if grantee_code:
+            rows = conn.execute(
+                "SELECT * FROM fcc_records WHERE grantee_code = ? ORDER BY received_at DESC LIMIT ?",
+                (grantee_code, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM fcc_records ORDER BY received_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+        return [
+            FCCRecord(
+                fcc_id=r["fcc_id"],
+                grantee_code=r["grantee_code"],
+                product_code=r["product_code"],
+                applicant_name=r["applicant_name"],
+                product_name=r["product_name"],
+                product_description=r["product_description"],
+                certification_date=r["certification_date"],
+                grant_date=r["grant_date"],
+                filing_date=r["filing_date"],
+                status=r["status"],
+                application_type=r["application_type"],
+                expires_on=r["expires_on"],
+            )
+            for r in rows
+        ]
+
+
+# Alias for test compatibility
+DatabaseManager = Database

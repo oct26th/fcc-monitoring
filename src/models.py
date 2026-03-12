@@ -1,5 +1,6 @@
 """Shared data models for FCC Monitor."""
-from dataclasses import dataclass, field
+import hashlib
+from dataclasses import dataclass
 from typing import Optional
 
 
@@ -19,6 +20,22 @@ class FCCRecord:
     application_type: str = ""
     expires_on: Optional[str] = None
     application_id: Optional[str] = None   # FCC application_id (for PDF/exhibit lookup)
+
+    def __post_init__(self):
+        # Sync product_name ← product_description if name is empty
+        if not self.product_name and self.product_description:
+            self.product_name = self.product_description
+        # Sync grant_date ← certification_date if grant_date is empty
+        if not self.grant_date and self.certification_date:
+            self.grant_date = self.certification_date
+
+    def fingerprint(self) -> str:
+        """Hash of core identity fields (excludes mutable fields like status)."""
+        key = "|".join([
+            self.fcc_id, self.grantee_code, self.product_code,
+            self.applicant_name, self.grant_date, self.application_type,
+        ])
+        return hashlib.sha256(key.encode()).hexdigest()
 
     def __hash__(self):
         return hash(self.fcc_id)

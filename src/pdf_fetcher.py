@@ -20,11 +20,12 @@ Real URL examples (from FCC):
     https://apps.fcc.gov/eas/GetApplicationAttachment.html?id=9082570
 """
 
+import json
 import re
 import time
 from pathlib import Path
 from typing import Optional
-from urllib import parse as urllib_parse
+from urllib import parse as urllib_parse, request as urllib_request
 
 import httpx
 from loguru import logger
@@ -216,19 +217,95 @@ def _spidercloud_get_bytes(
 # ---------------------------------------------------------------------------
 
 def _fetch_exhibits(url: str, proxy: Optional[SpiderCloudProxy]) -> Optional[str]:
-    if proxy:
-        html = proxy.fetch_html(url)
-        return html
-
-    # No proxy: try direct (may hit Akamai)
+    # Try direct first — FCC exhibit pages are usually accessible without Akamai bypass
     try:
         with httpx.Client(timeout=30.0, follow_redirects=True) as client:
-            resp = client.get(url, headers={"User-Agent": _USER_AGENT})
-            if resp.status_code == 200:
+            resp = client.get(url, headers={"User-Agent": _USER_AGENT, "Referer": "https://apps.fcc.gov/"})
+            if resp.status_code == 200 and len(resp.text) > 200:
                 return resp.text
+            logger.debug(f"[PDFFetcher] direct exhibits HTTP {resp.status_code} for {url[:80]}")
     except Exception as exc:
-        logger.error(f"[PDFFetcher] direct exhibits fetch failed: {exc}")
+        logger.debug(f"[PDFFetcher] direct exhibits fetch failed: {exc}")
+
+    # Fallback to SpiderCloud proxy if available
+    if proxy:
+        return proxy.fetch_html(url)
     return None
+
+
+# ---------------------------------------------------------------------------
+# Browserless exhibits fetch  (Akamai bypass via managed browser)
+# ---------------------------------------------------------------------------
+
+_BROWSERLESS_EXHIBITS_JS = """
+export default async ({ page, context }) => {
+  const url = context.url;
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+  await page.setViewport({ width: 1280, height: 800 });
+  try {
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+    const title = await page.title();
+    if (title.toLowerCase().includes('access denied')) throw new Error('Blocked by Akamai');
+
+    const attachments = await page.evaluate(() => {
+      const results = [];
+      const seen = new Set();
+      const rows = Array.from(document.querySelectorAll('tr'));
+      for (const row of rows) {
+        const rowText = row.innerText.toLowerCase();
+        if (!rowText.includes('label')) continue;
+        const attRe = /GetApplicationAttachment[^"']*[?&]id=(\\d+)/i;
+        const links = Array.from(row.querySelectorAll('a'));
+        for (const link of links) {
+          const href = link.getAttribute('href') || '';
+          const m = href.match(attRe);
+          if (!m) continue;
+          const attId = m[1];
+          if (seen.has(attId)) continue;
+          seen.add(attId);
+          const firstTd = row.querySelector('td');
+          const desc = firstTd ? firstTd.innerText.trim() : 'Label';
+          results.push({ id: attId, desc: desc });
+        }
+      }
+      return results;
+    });
+    return { attachments };
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+"""
+
+
+def _browserless_fetch_attachments(url: str) -> list[tuple[str, str]]:
+    """Use Browserless /function to extract label attachment IDs from exhibits page."""
+    settings = get_settings()
+    cfg = settings.data_source.browserless
+    if not cfg.api_key:
+        logger.debug("[PDFFetcher] Browserless not configured, skipping")
+        return []
+
+    endpoint = f"https://production-{cfg.region}.browserless.io/function?token={cfg.api_key}"
+    payload = {
+        "code": _BROWSERLESS_EXHIBITS_JS,
+        "context": {"url": url},
+    }
+    data = json.dumps(payload).encode("utf-8")
+    headers = {"Content-Type": "application/json", "Cache-Control": "no-cache"}
+
+    try:
+        req = urllib_request.Request(endpoint, data=data, headers=headers)
+        with urllib_request.urlopen(req, timeout=120) as resp:
+            result = json.loads(resp.read().decode())
+        if "error" in result:
+            logger.error(f"[PDFFetcher] Browserless exhibits error: {result['error']}")
+            return []
+        attachments = result.get("attachments", [])
+        return [(a["id"], a.get("desc", "Label")) for a in attachments]
+    except Exception as exc:
+        logger.error(f"[PDFFetcher] Browserless exhibits fetch failed: {exc}")
+        return []
 
 
 # ---------------------------------------------------------------------------
@@ -320,15 +397,20 @@ class PDFFetcher:
         url = _exhibits_url(fcc_id, application_id)
         logger.info(f"[PDFFetcher] Fetching exhibits: {url}")
 
+        # Try direct HTTP + SpiderCloud first, then fall back to Browserless
+        attachments: list[tuple[str, str]] = []
         html = _fetch_exhibits(url, self._proxy)
-        if not html:
-            logger.error(f"[PDFFetcher] Could not fetch exhibits page for {fcc_id}")
-            return []
+        if html:
+            attachments = _parse_label_attachments(html)
+            if not attachments:
+                logger.debug(f"[PDFFetcher] HTML snippet: {html[:600]}")
 
-        attachments = _parse_label_attachments(html)
+        if not attachments:
+            logger.info(f"[PDFFetcher] Trying Browserless for exhibits page of {fcc_id}")
+            attachments = _browserless_fetch_attachments(url)
+
         if not attachments:
             logger.warning(f"[PDFFetcher] No Label attachments found for {fcc_id}")
-            logger.debug(f"[PDFFetcher] HTML snippet: {html[:600]}")
             return []
 
         logger.info(

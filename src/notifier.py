@@ -1,5 +1,8 @@
 """Notification management for FCC Monitor."""
 import json
+import mimetypes
+import uuid
+from pathlib import Path
 from typing import List, Optional
 from urllib import request, parse
 
@@ -37,6 +40,48 @@ class Notifier:
         except Exception as e:
             logger.error(f"Telegram notification failed: {e}")
             
+        return False
+
+    def send_telegram_document(self, file_path: Path, caption: str = "") -> bool:
+        """Upload a file (PDF) to Telegram via sendDocument."""
+        if not self.telegram_token or not self.telegram_chat_id:
+            return False
+
+        url = f"https://api.telegram.org/bot{self.telegram_token}/sendDocument"
+        boundary = uuid.uuid4().hex
+
+        with open(file_path, "rb") as f:
+            file_data = f.read()
+
+        body = (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="chat_id"\r\n\r\n'
+            f"{self.telegram_chat_id}\r\n"
+        )
+        if caption:
+            body += (
+                f"--{boundary}\r\n"
+                f'Content-Disposition: form-data; name="caption"\r\n\r\n'
+                f"{caption}\r\n"
+            )
+        body_bytes = body.encode() + (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="document"; filename="{file_path.name}"\r\n'
+            f"Content-Type: application/pdf\r\n\r\n"
+        ).encode() + file_data + f"\r\n--{boundary}--\r\n".encode()
+
+        try:
+            req = request.Request(
+                url,
+                data=body_bytes,
+                headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+            )
+            with request.urlopen(req, timeout=30) as resp:
+                if resp.status == 200:
+                    logger.info(f"Telegram document sent: {file_path.name}")
+                    return True
+        except Exception as e:
+            logger.error(f"Telegram document upload failed: {e}")
         return False
 
     def send_discord(self, message: str):

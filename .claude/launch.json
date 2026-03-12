@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fcc-monitor-daemon",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "src.main", "--daemon", "--strategy", "browserless"],
+      "port": 8080
+    },
+    {
+      "name": "fcc-monitor-once",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "src.main", "--strategy", "browserless", "--since-days", "30"],
+      "port": 8080
+    },
+    {
+      "name": "fcc-monitor-dry-run",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "src.main", "--dry-run", "--strategy", "browserless", "--since-days", "30"],
+      "port": 8080
+    }
+  ]
+}

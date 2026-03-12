@@ -68,7 +68,7 @@ def _configure_logging(level: str, log_file: str):
 # Core scan logic
 # ---------------------------------------------------------------------------
 
-def run_scan(dry_run: bool = False, since_days: int | None = None) -> dict:
+def run_scan(dry_run: bool = False, since_days: int | None = None, strategy: str | None = None) -> dict:
     """
     Execute one full monitoring scan across all configured grantee codes.
 
@@ -76,7 +76,7 @@ def run_scan(dry_run: bool = False, since_days: int | None = None) -> dict:
     """
     settings = get_settings()
     db = Database(settings.database.path)
-    fetcher = get_fetcher()
+    fetcher = get_fetcher(strategy)
     pdf_fetcher = PDFFetcher(output_dir="data/pdfs")
     notifier = Notifier(
         telegram_token=settings.telegram.bot_token,
@@ -156,6 +156,12 @@ def run_scan(dry_run: bool = False, since_days: int | None = None) -> dict:
                         )
                         summary[grantee_code].setdefault("pdfs_downloaded", 0)
                         summary[grantee_code]["pdfs_downloaded"] += len(pdfs)
+                        # Send each PDF directly to Telegram
+                        for pdf_path in pdfs:
+                            notifier.send_telegram_document(
+                                pdf_path,
+                                caption=f"📄 {record.fcc_id} Label PDF",
+                            )
                     else:
                         logger.warning(
                             f"No Label PDFs found for {record.fcc_id}"
@@ -256,14 +262,14 @@ def main():
         logger.info(f"Daemon mode: scanning every {args.interval_hours}h")
         while True:
             try:
-                summary = run_scan(dry_run=args.dry_run, since_days=args.since_days)
+                summary = run_scan(dry_run=args.dry_run, since_days=args.since_days, strategy=args.strategy)
                 logger.info(f"Scan summary: {summary}")
             except Exception:
                 logger.exception("Unhandled error during scan — will retry next interval")
             logger.info(f"Sleeping {args.interval_hours}h until next scan…")
             time.sleep(interval_s)
     else:
-        summary = run_scan(dry_run=args.dry_run, since_days=args.since_days)
+        summary = run_scan(dry_run=args.dry_run, since_days=args.since_days, strategy=args.strategy)
         logger.info(f"Scan complete. Summary: {summary}")
 
 
