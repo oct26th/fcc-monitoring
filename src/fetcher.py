@@ -6,8 +6,8 @@ Architecture:
   SpiderCloudFetcher        — ⚠️  KNOWN BUG: /scrape API eats POST body (grantee_code
                               becomes a GET param-less request). Use automation_scripts
                               path or BrowserlessFetcher instead.
-  SpiderCloudScriptFetcher  — Fixed path: uses spider.cloud /pipeline endpoint with
-                              an automation script to fill and submit the search form.
+  SpiderCloudScriptFetcher  — Fixed path: uses spider.cloud automation_scripts to
+                              fill and submit the FCC search form via headless Chrome.
   BrowserlessFetcher        — Secondary fetcher: uses Browserless.io JS execution
                               as an alternative browser-based scraping path.
   PlaywrightFetcher         — Tertiary fetcher: local Playwright instance (fallback).
@@ -591,23 +591,26 @@ export default async ({ page, context }) => {
 
 
 # ===========================================================================
-# SpiderCloud Script Fetcher  ─  Fixed POST path via execution_scripts
+# SpiderCloud Script Fetcher  ─  Fixed POST path via automation_scripts
 # ===========================================================================
 
 class SpiderCloudScriptFetcher(BaseFetcher):
     """
-    Fetch FCC EAS results using spider.cloud's execution_scripts parameter.
+    Fetch FCC EAS results using spider.cloud's automation_scripts parameter.
 
     WHY THIS EXISTS:
       SpiderCloudFetcher.post_form() is broken: spider.cloud's /scrape endpoint
       silently drops the POST body, so grantee_code never reaches apps.fcc.gov.
 
     HOW THIS WORKS:
-      spider.cloud's /scrape endpoint supports an `execution_scripts` parameter —
-      a dict mapping URL → JS string.  The JS runs inside spider.cloud's managed
-      Chrome after the page loads, fills in the grantee_code field, and submits
-      the form.  Spider captures the resulting page HTML and returns it.
+      spider.cloud's /scrape endpoint supports an `automation_scripts` parameter —
+      a dict mapping URL → list of actions.  The actions run inside spider.cloud's
+      managed Chrome: Evaluate JS to fill the form, Click the submit button, then
+      WaitForNavigation (null) to capture the results page HTML.
       No local Playwright or CDP connection required; pure httpx POST.
+
+    Verified action format:
+      {url_pattern: [{"Evaluate": "..."}, {"Click": "..."}, {"WaitForNavigation": null}]}
 
     API reference: https://spider.cloud/guides/crawling-authenticated-pages
     """
@@ -678,25 +681,24 @@ class SpiderCloudScriptFetcher(BaseFetcher):
         return []
 
     def _fetch_via_execution_scripts(self, grantee_code: str) -> Optional[str]:
-        """POST to spider.cloud /scrape with execution_scripts to fill and submit the FCC form."""
-        js = (
-            "document.addEventListener('DOMContentLoaded', function() {"
-            f"  var gc = document.querySelector('input[name=\"grantee_code\"]');"
-            f"  if (gc) gc.value = '{grantee_code}';"
-            "  var sr = document.querySelector('input[name=\"show_records\"]');"
-            "  if (sr) sr.value = '500';"
-            "  var btn = document.querySelector('input[type=\"submit\"]');"
-            "  if (btn) btn.click();"
-            "});"
+        """POST to spider.cloud /scrape with automation_scripts to fill and submit the FCC form."""
+        js_fill = (
+            f"document.querySelector('input[name=\"grantee_code\"]').value = '{grantee_code}';"
+            "document.querySelector('input[name=\"show_records\"]').value = '500';"
         )
         payload = {
             "url": self.FCC_SEARCH_URL,
             "request": "chrome",
-            "execution_scripts": {self.FCC_SEARCH_URL: js},
+            "automation_scripts": {
+                self.FCC_SEARCH_URL: [
+                    {"Evaluate": js_fill},
+                    {"Click": "input[type='submit']"},
+                    {"WaitForNavigation": None},
+                ]
+            },
             "return_format": "html",
-            "stealth": 1,
+            "stealth": True,
             "proxy_enabled": True,
-            "anti_bot": True,
         }
         with httpx.Client(timeout=self.timeout) as client:
             resp = client.post(
