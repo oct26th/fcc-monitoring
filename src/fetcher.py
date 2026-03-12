@@ -1,14 +1,17 @@
 """Data fetchers for FCC/SpiderCloud/Browser APIs.
 
 Architecture:
-  SpiderCloudProxy   — Network layer: routes HTTP requests through spider.cloud
-                       to bypass Akamai bot-detection on apps.fcc.gov.
-  SpiderCloudFetcher — Primary fetcher: uses SpiderCloudProxy to scrape the
-                       FCC EAS search page and parse results.
-  BrowserlessFetcher — Secondary fetcher: uses Browserless.io JS execution
-                       as an alternative browser-based scraping path.
-  PlaywrightFetcher  — Tertiary fetcher: local Playwright instance (fallback).
-  get_fetcher()      — Factory; selects strategy from settings or explicit arg.
+  SpiderCloudProxy          — Network layer: routes HTTP requests through spider.cloud
+                              to bypass Akamai bot-detection on apps.fcc.gov.
+  SpiderCloudFetcher        — ⚠️  KNOWN BUG: /scrape API eats POST body (grantee_code
+                              becomes a GET param-less request). Use automation_scripts
+                              path or BrowserlessFetcher instead.
+  SpiderCloudScriptFetcher  — Fixed path: uses spider.cloud automation_scripts to
+                              fill and submit the FCC search form via headless Chrome.
+  BrowserlessFetcher        — Secondary fetcher: uses Browserless.io JS execution
+                              as an alternative browser-based scraping path.
+  PlaywrightFetcher         — Tertiary fetcher: local Playwright instance (fallback).
+  get_fetcher()             — Factory; selects strategy from settings or explicit arg.
 """
 
 import json
@@ -130,10 +133,9 @@ class SpiderCloudProxy:
         payload: Dict[str, Any] = {
             "url":           url,
             "return_format": return_format,
-            "stealth":       1 if self.stealth else 0,
+            "request":       "chrome",
+            "stealth":       True if self.stealth else False,
             "proxy_enabled": self.proxy_enabled,
-            "render_js":     self.render_js,
-            "anti_bot":      True,          # explicit Akamai/Cloudflare bypass
         }
         if post_body is not None:
             payload["http_method"] = "POST"
@@ -371,7 +373,8 @@ def _parse_fcc_search_html(html: str, grantee_code: str) -> List[FCCRecord]:
 
         # Parse data rows
         for row_html in rows[1:]:
-            cells = [strip_tags(c) for c in cell_pattern.findall(row_html)]
+            raw_cells = cell_pattern.findall(row_html)   # keep raw HTML for link extraction
+            cells = [strip_tags(c) for c in raw_cells]
             if len(cells) < 3:
                 continue
 
@@ -387,6 +390,21 @@ def _parse_fcc_search_html(html: str, grantee_code: str) -> List[FCCRecord]:
 
             product_code = fcc_id[len(grantee_code):]
 
+            # Extract application_id from the href in the FCC ID cell.
+            # FCC search results link each ID to ViewGrantApplication.cfm with
+            # application_id=<base64> in the query string.
+            application_id: Optional[str] = None
+            fcc_id_col = col.get("fcc_id")
+            if fcc_id_col is not None and fcc_id_col < len(raw_cells):
+                m = re.search(
+                    r"application_id=([A-Za-z0-9+/%=]+)",
+                    raw_cells[fcc_id_col],
+                    re.IGNORECASE,
+                )
+                if m:
+                    from urllib.parse import unquote
+                    application_id = unquote(m.group(1))
+
             # Format location into applicant_name
             city  = get("city")
             state = get("state")
@@ -397,15 +415,16 @@ def _parse_fcc_search_html(html: str, grantee_code: str) -> List[FCCRecord]:
                 name = f"{name} ({location})"
 
             records.append(FCCRecord(
-                fcc_id           = fcc_id,
-                grantee_code     = grantee_code,
-                product_code     = product_code,
-                applicant_name   = name,
+                fcc_id              = fcc_id,
+                grantee_code        = grantee_code,
+                product_code        = product_code,
+                applicant_name      = name,
                 product_description = get("product_desc"),
-                grant_date       = get("grant_date"),
-                filing_date      = get("filing_date"),
-                application_type = get("app_type"),
-                status           = "Granted",
+                grant_date          = get("grant_date"),
+                filing_date         = get("filing_date"),
+                application_type    = get("app_type"),
+                status              = "Granted",
+                application_id      = application_id,
             ))
 
     return records
@@ -484,6 +503,14 @@ export default async ({ page, context }) => {
         for (const [key, idx] of Object.entries(colMap)) {
           if (cells[idx]) rect[key] = cells[idx].innerText.trim();
         }
+        // Extract application_id from the FCC ID cell's <a href>
+        if (colMap.fcc_id !== undefined && cells[colMap.fcc_id]) {
+          const link = cells[colMap.fcc_id].querySelector('a');
+          if (link) {
+            const m = link.href.match(/application_id=([^&]+)/i);
+            if (m) rect.application_id = decodeURIComponent(m[1]);
+          }
+        }
         return rect;
       }).filter(r => r && r.fcc_id);
       return { records };
@@ -554,11 +581,141 @@ export default async ({ page, context }) => {
                         grant_date          = item.get("grant_date", ""),
                         filing_date         = item.get("filing_date", ""),
                         application_type    = item.get("app_type", ""),
+                        application_id      = item.get("application_id"),
                     ))
                 return records
         except Exception as e:
             logger.error(f"Browserless fetch failed: {e}")
             return []
+
+
+# ===========================================================================
+# SpiderCloud Script Fetcher  ─  Fixed POST path via automation_scripts
+# ===========================================================================
+
+class SpiderCloudScriptFetcher(BaseFetcher):
+    """
+    Fetch FCC EAS results using spider.cloud's automation_scripts parameter.
+
+    WHY THIS EXISTS:
+      SpiderCloudFetcher.post_form() is broken: spider.cloud's /scrape endpoint
+      silently drops the POST body, so grantee_code never reaches apps.fcc.gov.
+
+    HOW THIS WORKS:
+      spider.cloud's /scrape endpoint supports an `automation_scripts` parameter —
+      a dict mapping URL → list of actions.  The actions run inside spider.cloud's
+      managed Chrome: Evaluate JS to fill the form, Click the submit button, then
+      WaitForNavigation (null) to capture the results page HTML.
+      No local Playwright or CDP connection required; pure httpx POST.
+
+    Verified action format:
+      {url_pattern: [{"Evaluate": "..."}, {"Click": "..."}, {"WaitForNavigation": null}]}
+
+    API reference: https://spider.cloud/guides/crawling-authenticated-pages
+    """
+
+    SCRAPE_ENDPOINT = "https://api.spider.cloud/scrape"
+    FCC_SEARCH_URL = "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm"
+
+    def __init__(self):
+        super().__init__()
+        cfg = self.settings.data_source.spidercloud
+        self.api_key = cfg.api_key
+        self.timeout = cfg.timeout
+        self.max_retries = cfg.max_retries
+        if not self.api_key:
+            logger.warning(
+                "[SpiderCloudScriptFetcher] No SPIDERCLOUD_API_KEY — fetcher disabled."
+            )
+
+    def fetch_by_grantee(self, grantee_code: str) -> List[FCCRecord]:
+        if not self.api_key:
+            return []
+
+        logger.info(f"[SpiderCloudScriptFetcher] Fetching grantee: {grantee_code}")
+
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                html = self._fetch_via_execution_scripts(grantee_code)
+            except httpx.HTTPStatusError as exc:
+                logger.warning(
+                    f"[SpiderCloudScriptFetcher] HTTP {exc.response.status_code} "
+                    f"on attempt {attempt}/{self.max_retries}"
+                )
+                if exc.response.status_code in (429, 503) and attempt < self.max_retries:
+                    time.sleep(5 * attempt)
+                    continue
+                return []
+            except Exception as exc:
+                logger.warning(
+                    f"[SpiderCloudScriptFetcher] Attempt {attempt}/{self.max_retries} "
+                    f"failed: {exc}"
+                )
+                if attempt < self.max_retries:
+                    time.sleep(5 * attempt)
+                continue
+
+            if not html:
+                logger.warning(
+                    f"[SpiderCloudScriptFetcher] Empty HTML for {grantee_code} "
+                    f"(attempt {attempt})"
+                )
+                if attempt < self.max_retries:
+                    time.sleep(5 * attempt)
+                continue
+
+            if _is_akamai_block(html):
+                logger.warning(
+                    f"[SpiderCloudScriptFetcher] Akamai block for {grantee_code}"
+                )
+                return []
+
+            records = _parse_fcc_search_html(html, grantee_code)
+            logger.info(
+                f"[SpiderCloudScriptFetcher] Parsed {len(records)} records "
+                f"for {grantee_code}"
+            )
+            return records
+
+        return []
+
+    def _fetch_via_execution_scripts(self, grantee_code: str) -> Optional[str]:
+        """POST to spider.cloud /scrape with automation_scripts to fill and submit the FCC form."""
+        js_fill = (
+            f"document.querySelector('input[name=\"grantee_code\"]').value = '{grantee_code}';"
+            "document.querySelector('input[name=\"show_records\"]').value = '500';"
+        )
+        payload = {
+            "url": self.FCC_SEARCH_URL,
+            "request": "chrome",
+            "automation_scripts": {
+                self.FCC_SEARCH_URL: [
+                    {"Evaluate": js_fill},
+                    {"Click": "input[type='submit']"},
+                    {"WaitForNavigation": None},
+                ]
+            },
+            "return_format": "html",
+            "stealth": True,
+            "proxy_enabled": True,
+        }
+        with httpx.Client(timeout=self.timeout) as client:
+            resp = client.post(
+                self.SCRAPE_ENDPOINT,
+                json=payload,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        if isinstance(data, list) and data:
+            return data[0].get("content") or data[0].get("html") or ""
+        if isinstance(data, dict):
+            return data.get("content") or data.get("html") or ""
+        return None
 
 
 # ===========================================================================
@@ -602,6 +759,10 @@ def get_fetcher(strategy: Optional[str] = None) -> BaseFetcher:
     logger.info(f"[get_fetcher] Using strategy: {strategy}")
 
     if strategy == "spidercloud":
+        # Use the automation_scripts path to avoid the POST-body bug in /scrape
+        return SpiderCloudScriptFetcher()
+    elif strategy == "spidercloud_legacy":
+        # Original /scrape path — kept for reference but broken for POST forms
         return SpiderCloudFetcher()
     elif strategy == "browserless":
         return BrowserlessFetcher()
