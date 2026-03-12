@@ -148,7 +148,14 @@ def run_scan(dry_run: bool = False, since_days: int | None = None) -> dict:
                         )
                         continue
 
-                    pdfs = pdf_fetcher.fetch_label_pdfs(record.fcc_id, record.application_id)
+                    # Pass session cookies from the search step so the exhibits
+                    # page and PDF download share the same Akamai session.
+                    session_cookies = getattr(fetcher, "last_session_cookies", "")
+                    pdfs = pdf_fetcher.fetch_label_pdfs(
+                        record.fcc_id,
+                        record.application_id,
+                        session_cookies=session_cookies,
+                    )
                     if pdfs:
                         logger.info(
                             f"📄 Downloaded {len(pdfs)} PDF(s) for {record.fcc_id}: "

@@ -190,10 +190,94 @@ class SpiderCloudProxy:
     # Public helpers
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _extract_cookies(item: Any) -> str:
+        """
+        Parse cookies from a Spider.cloud response item.
+
+        Spider.cloud may return cookies as:
+          - str:  "name=val; name2=val2"   (Cookie header format)
+          - list: [{"name": "...", "value": "..."}, ...]
+          - dict: {"name": "value", ...}
+        """
+        raw = item.get("cookies") or "" if isinstance(item, dict) else ""
+        if isinstance(raw, str):
+            return raw
+        if isinstance(raw, list):
+            return "; ".join(
+                f"{c['name']}={c['value']}"
+                for c in raw
+                if isinstance(c, dict) and "name" in c
+            )
+        if isinstance(raw, dict):
+            return "; ".join(f"{k}={v}" for k, v in raw.items())
+        return ""
+
+    def _request_with_retry_full(self, payload: Dict[str, Any]) -> tuple[Optional[str], str]:
+        """Like _request_with_retry but also returns captured cookies."""
+        url = self.BASE_URL + self.SCRAPE_ENDPOINT
+
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                resp = self.session.post(url, json=payload)
+                resp.raise_for_status()
+                data = resp.json()
+
+                item: Dict[str, Any] = {}
+                if isinstance(data, list) and data:
+                    item = data[0]
+                elif isinstance(data, dict):
+                    item = data
+                else:
+                    return None, ""
+
+                html = item.get("content") or item.get("html") or ""
+                cookies = self._extract_cookies(item)
+                return html or None, cookies
+
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                logger.warning(
+                    f"[SpiderCloudProxy] HTTP {status} on attempt {attempt}/{self.max_retries}"
+                )
+                if status in (429, 503) and attempt < self.max_retries:
+                    time.sleep(self.retry_delay * attempt)
+                    continue
+                return None, ""
+            except httpx.RequestError as exc:
+                logger.warning(
+                    f"[SpiderCloudProxy] Request error attempt {attempt}/{self.max_retries}: {exc}"
+                )
+                if attempt < self.max_retries:
+                    time.sleep(self.retry_delay * attempt)
+                    continue
+                return None, ""
+
+        return None, ""
+
     def fetch_html(self, url: str, **extra) -> Optional[str]:
         """GET a URL; return rendered HTML (Akamai-bypassed)."""
         payload = self._build_payload(url, return_format=self.FORMAT_HTML, extra=extra or None)
         return self._request_with_retry(payload)
+
+    def fetch_html_with_cookies(
+        self,
+        url: str,
+        incoming_cookies: str = "",
+        **extra,
+    ) -> tuple[Optional[str], str]:
+        """
+        GET a URL via Spider.cloud; return (html, captured_cookies).
+
+        Pass *incoming_cookies* (Cookie-header string) to carry forward an
+        existing FCC/Akamai session.  The method also requests return_cookies
+        so the response cookies can be chained to the next request.
+        """
+        payload = self._build_payload(url, return_format=self.FORMAT_HTML, extra=extra or None)
+        payload["return_cookies"] = True
+        if incoming_cookies:
+            payload["cookies"] = incoming_cookies
+        return self._request_with_retry_full(payload)
 
     def post_form(self, url: str, form_data: Dict[str, str], **extra) -> Optional[str]:
         """
@@ -628,6 +712,10 @@ class SpiderCloudScriptFetcher(BaseFetcher):
                 "[SpiderCloudScriptFetcher] No SPIDERCLOUD_API_KEY — fetcher disabled."
             )
 
+    # Last captured session cookies — set after each successful search.
+    # PDFFetcher reads this to chain requests under the same Akamai session.
+    last_session_cookies: str = ""
+
     def fetch_by_grantee(self, grantee_code: str) -> List[FCCRecord]:
         if not self.api_key:
             return []
@@ -636,7 +724,7 @@ class SpiderCloudScriptFetcher(BaseFetcher):
 
         for attempt in range(1, self.max_retries + 1):
             try:
-                html = self._fetch_via_execution_scripts(grantee_code)
+                html, cookies = self._fetch_via_automation_scripts(grantee_code)
             except httpx.HTTPStatusError as exc:
                 logger.warning(
                     f"[SpiderCloudScriptFetcher] HTTP {exc.response.status_code} "
@@ -670,6 +758,13 @@ class SpiderCloudScriptFetcher(BaseFetcher):
                 )
                 return []
 
+            if cookies:
+                self.last_session_cookies = cookies
+                logger.debug(
+                    f"[SpiderCloudScriptFetcher] Session cookies captured "
+                    f"({len(cookies)} chars)"
+                )
+
             records = _parse_fcc_search_html(html, grantee_code)
             logger.info(
                 f"[SpiderCloudScriptFetcher] Parsed {len(records)} records "
@@ -679,8 +774,17 @@ class SpiderCloudScriptFetcher(BaseFetcher):
 
         return []
 
-    def _fetch_via_execution_scripts(self, grantee_code: str) -> Optional[str]:
-        """POST to spider.cloud /scrape with automation_scripts to fill and submit the FCC form."""
+    def _fetch_via_automation_scripts(
+        self, grantee_code: str
+    ) -> tuple[Optional[str], str]:
+        """
+        POST to spider.cloud /scrape with automation_scripts to fill and submit
+        the FCC search form.  Returns (html, cookies).
+
+        return_cookies=True captures the FCC/Akamai session so follow-up
+        requests (exhibits page, PDF) can pass them as ``cookies`` and appear
+        to be part of the same browser session.
+        """
         js_fill = (
             f"document.querySelector('input[name=\"grantee_code\"]').value = '{grantee_code}';"
             "document.querySelector('input[name=\"show_records\"]').value = '500';"
@@ -696,6 +800,7 @@ class SpiderCloudScriptFetcher(BaseFetcher):
                 ]
             },
             "return_format": "html",
+            "return_cookies": True,
             "stealth": True,
             "proxy_enabled": True,
         }
@@ -711,11 +816,15 @@ class SpiderCloudScriptFetcher(BaseFetcher):
             resp.raise_for_status()
             data = resp.json()
 
+        item: Dict[str, Any] = {}
         if isinstance(data, list) and data:
-            return data[0].get("content") or data[0].get("html") or ""
-        if isinstance(data, dict):
-            return data.get("content") or data.get("html") or ""
-        return None
+            item = data[0]
+        elif isinstance(data, dict):
+            item = data
+
+        html = item.get("content") or item.get("html") or ""
+        cookies = SpiderCloudProxy._extract_cookies(item)
+        return html or None, cookies
 
 
 # ===========================================================================
