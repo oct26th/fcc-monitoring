@@ -109,9 +109,9 @@ def _parse_label_attachments(html: str) -> list[tuple[str, str]]:
     for row_m in row_re.finditer(html):
         row_html = row_m.group(1)
 
-        # Check plain text of the whole row for "label"
+        # Check plain text of the whole row for "label" or "antenna"
         row_text = re.sub(r"<[^>]+>", "", row_html).lower()
-        if "label" not in row_text:
+        if "label" not in row_text and "antenna" not in row_text:
             continue
 
         # Pull attachment IDs from this row
@@ -126,7 +126,7 @@ def _parse_label_attachments(html: str) -> list[tuple[str, str]]:
             desc = (
                 re.sub(r"<[^>]+>", "", first_td.group(1)).strip()
                 if first_td
-                else "Label"
+                else "Document"
             )
             results.append((att_id, desc))
             logger.debug(f"[PDFFetcher] label attachment: id={att_id} desc='{desc}'")
@@ -267,9 +267,9 @@ export default async ({ page, context }) => {
         const directCells = Array.from(row.children).filter(n => n.tagName === 'TD' || n.tagName === 'TH');
         if (directCells.length === 0) continue;
         const rowText = directCells.map(c => c.innerText).join('\\t').toLowerCase();
-        if (!rowText.includes('label')) continue;
+        if (!rowText.includes('label') && !rowText.includes('antenna')) continue;
         seen.add(m[1]);
-        const desc = link.innerText.trim() || directCells[0].innerText.trim() || 'Label';
+        const desc = link.innerText.trim() || directCells[0].innerText.trim() || 'Document';
         results.push({ id: m[1], desc });
       }
       return results;
@@ -333,7 +333,7 @@ def _browserless_fetch_attachments(url: str) -> list[tuple[str, str]]:
             logger.error(f"[PDFFetcher] Browserless exhibits error: {result['error']}")
             return []
         attachments = result.get("attachments", [])
-        return [(a["id"], a.get("desc", "Label")) for a in attachments]
+        return [(a["id"], a.get("desc", "Document")) for a in attachments]
     except Exception as exc:
         logger.error(f"[PDFFetcher] Browserless exhibits fetch failed: {exc}")
         return []
@@ -376,7 +376,7 @@ def _browserless_fetch_label_pdfs(url: str, out_dir: Path) -> list[Path]:
     saved: list[Path] = []
     for item in pdfs_data:
         att_id = item.get("id", "unknown")
-        desc = item.get("desc", "Label")
+        desc = item.get("desc", "Document")
         if "error" in item:
             logger.warning(f"[PDFFetcher] PDF fetch error for id={att_id}: {item['error']}")
             continue
