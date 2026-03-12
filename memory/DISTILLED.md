@@ -76,8 +76,8 @@ Python 3.11+ · loguru · httpx · pydantic · pydantic-settings · SQLite · Br
 | Analyst | 真希波 | 情報分析 |
 | Secretary | PenPen | 團隊秘書 |
 
-## 下一步（待辦）
+## 已完成里程碑（2026-03-12 全數達成 ✅）
 
-- [ ] Antenna PDF 下載（目前只抓 Label PDF）
-- [ ] 通知排版優化（PDF 放下方）
-- [ ] Bot token 確認（確保發到正確頻道）
+- [x] Antenna PDF 下載
+- [x] 通知排版優化（PDF 放下方）
+- [x] Bot token 確認（發到正確頻道）
