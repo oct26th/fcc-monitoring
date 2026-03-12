@@ -123,7 +123,7 @@ class Notifier:
         date    = _fmt_date(record.grant_date or record.filing_date or "")
         name    = record.product_name or record.product_description or "—"
         app_type = record.application_type or "New Filing"
-        fcc_url = f"https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm?SearchType=All&FCCID={record.fcc_id}"
+        fcc_url = f"https://fccid.io/{record.fcc_id}"
 
         msg = (
             f"{header}\n\n"

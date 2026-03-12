@@ -237,40 +237,71 @@ def _fetch_exhibits(url: str, proxy: Optional[SpiderCloudProxy]) -> Optional[str
 # Browserless exhibits fetch  (Akamai bypass via managed browser)
 # ---------------------------------------------------------------------------
 
-_BROWSERLESS_EXHIBITS_JS = """
+_BROWSERLESS_EXHIBITS_AND_DOWNLOAD_JS = """
 export default async ({ page, context }) => {
   const url = context.url;
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
   await page.setViewport({ width: 1280, height: 800 });
   try {
+    // Step 1: load exhibits page — establishes Akamai session cookies
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
     const title = await page.title();
     if (title.toLowerCase().includes('access denied')) throw new Error('Blocked by Akamai');
 
+    // Step 2: find Label attachments by inspecting each link's direct parent row.
+    // Using link.closest('tr') avoids the outer wrapper <tr> that contains the
+    // entire table as innerText and would match every attachment.
+    // We only keep rows that have direct <td> children (real data rows) and whose
+    // cell text includes "label" (exhibit type column).
     const attachments = await page.evaluate(() => {
       const results = [];
       const seen = new Set();
-      const rows = Array.from(document.querySelectorAll('tr'));
-      for (const row of rows) {
-        const rowText = row.innerText.toLowerCase();
+      const attRe = /GetApplicationAttachment[^"']*[?&]id=(\\d+)/i;
+      for (const link of document.querySelectorAll('a[href*="GetApplicationAttachment"]')) {
+        const href = link.getAttribute('href') || '';
+        const m = href.match(attRe);
+        if (!m || seen.has(m[1])) continue;
+        const row = link.closest('tr');
+        if (!row) continue;
+        // Only real data rows have direct <td> children (not wrapper rows)
+        const directCells = Array.from(row.children).filter(n => n.tagName === 'TD' || n.tagName === 'TH');
+        if (directCells.length === 0) continue;
+        const rowText = directCells.map(c => c.innerText).join('\\t').toLowerCase();
         if (!rowText.includes('label')) continue;
-        const attRe = /GetApplicationAttachment[^"']*[?&]id=(\\d+)/i;
-        const links = Array.from(row.querySelectorAll('a'));
-        for (const link of links) {
-          const href = link.getAttribute('href') || '';
-          const m = href.match(attRe);
-          if (!m) continue;
-          const attId = m[1];
-          if (seen.has(attId)) continue;
-          seen.add(attId);
-          const firstTd = row.querySelector('td');
-          const desc = firstTd ? firstTd.innerText.trim() : 'Label';
-          results.push({ id: attId, desc: desc });
-        }
+        seen.add(m[1]);
+        const desc = link.innerText.trim() || directCells[0].innerText.trim() || 'Label';
+        results.push({ id: m[1], desc });
       }
       return results;
     });
-    return { attachments };
+
+    if (attachments.length === 0) return { attachments: [] };
+
+    // Step 3: download each Label PDF using fetch() in browser context.
+    // fetch() reuses the current page's Akamai session cookies, bypassing the
+    // 403 that direct HTTP requests get.
+    const pdfs = [];
+    for (const att of attachments) {
+      const attUrl = 'https://apps.fcc.gov/eas/GetApplicationAttachment.html?id=' + att.id;
+      const pdfResult = await page.evaluate(async (u) => {
+        try {
+          const res = await fetch(u, { credentials: 'include' });
+          const ct = res.headers.get('content-type') || '';
+          if (res.status !== 200) return { error: 'HTTP ' + res.status };
+          const buf = await res.arrayBuffer();
+          const bytes = new Uint8Array(buf);
+          let binary = '';
+          const chunk = 8192;
+          for (let i = 0; i < bytes.length; i += chunk) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+          }
+          return { content: btoa(binary), contentType: ct, size: bytes.length };
+        } catch(e) { return { error: e.message }; }
+      }, attUrl);
+      pdfs.push({ id: att.id, desc: att.desc, ...pdfResult });
+    }
+
+    return { attachments, pdfs };
   } catch (e) {
     return { error: e.message };
   }
@@ -288,7 +319,7 @@ def _browserless_fetch_attachments(url: str) -> list[tuple[str, str]]:
 
     endpoint = f"https://production-{cfg.region}.browserless.io/function?token={cfg.api_key}"
     payload = {
-        "code": _BROWSERLESS_EXHIBITS_JS,
+        "code": _BROWSERLESS_EXHIBITS_AND_DOWNLOAD_JS,
         "context": {"url": url},
     }
     data = json.dumps(payload).encode("utf-8")
@@ -296,7 +327,7 @@ def _browserless_fetch_attachments(url: str) -> list[tuple[str, str]]:
 
     try:
         req = urllib_request.Request(endpoint, data=data, headers=headers)
-        with urllib_request.urlopen(req, timeout=120) as resp:
+        with urllib_request.urlopen(req, timeout=180) as resp:
             result = json.loads(resp.read().decode())
         if "error" in result:
             logger.error(f"[PDFFetcher] Browserless exhibits error: {result['error']}")
@@ -306,6 +337,69 @@ def _browserless_fetch_attachments(url: str) -> list[tuple[str, str]]:
     except Exception as exc:
         logger.error(f"[PDFFetcher] Browserless exhibits fetch failed: {exc}")
         return []
+
+
+def _browserless_fetch_label_pdfs(url: str, out_dir: Path) -> list[Path]:
+    """
+    Combined Browserless call: load exhibits page, find Label attachments, and
+    download each PDF via fetch() in the browser context (uses Akamai session
+    cookies).  Saves results to out_dir and returns list of saved paths.
+    """
+    import base64
+
+    settings = get_settings()
+    cfg = settings.data_source.browserless
+    if not cfg.api_key:
+        return []
+
+    endpoint = f"https://production-{cfg.region}.browserless.io/function?token={cfg.api_key}"
+    payload = {
+        "code": _BROWSERLESS_EXHIBITS_AND_DOWNLOAD_JS,
+        "context": {"url": url},
+    }
+    data = json.dumps(payload).encode("utf-8")
+    headers_http = {"Content-Type": "application/json", "Cache-Control": "no-cache"}
+
+    try:
+        req = urllib_request.Request(endpoint, data=data, headers=headers_http)
+        with urllib_request.urlopen(req, timeout=300) as resp:
+            result = json.loads(resp.read().decode())
+    except Exception as exc:
+        logger.error(f"[PDFFetcher] Browserless combined call failed: {exc}")
+        return []
+
+    if "error" in result:
+        logger.error(f"[PDFFetcher] Browserless error: {result['error']}")
+        return []
+
+    pdfs_data = result.get("pdfs", [])
+    saved: list[Path] = []
+    for item in pdfs_data:
+        att_id = item.get("id", "unknown")
+        desc = item.get("desc", "Label")
+        if "error" in item:
+            logger.warning(f"[PDFFetcher] PDF fetch error for id={att_id}: {item['error']}")
+            continue
+        b64 = item.get("content")
+        if not b64:
+            logger.warning(f"[PDFFetcher] Empty PDF content for id={att_id}")
+            continue
+        try:
+            pdf_bytes = base64.b64decode(b64)
+        except Exception as exc:
+            logger.warning(f"[PDFFetcher] base64 decode failed for id={att_id}: {exc}")
+            continue
+        if not _is_pdf(pdf_bytes):
+            logger.warning(f"[PDFFetcher] Non-PDF response for id={att_id} ({len(pdf_bytes)} B)")
+            continue
+        safe_desc = re.sub(r"[^\w\-]", "_", desc)[:50]
+        out_dir.mkdir(parents=True, exist_ok=True)
+        dest = out_dir / f"{safe_desc}_{att_id}.pdf"
+        dest.write_bytes(pdf_bytes)
+        logger.info(f"[PDFFetcher] Saved {len(pdf_bytes):,} B → {dest}")
+        saved.append(dest)
+
+    return saved
 
 
 # ---------------------------------------------------------------------------
@@ -397,7 +491,7 @@ class PDFFetcher:
         url = _exhibits_url(fcc_id, application_id)
         logger.info(f"[PDFFetcher] Fetching exhibits: {url}")
 
-        # Try direct HTTP + SpiderCloud first, then fall back to Browserless
+        # Step 1: try direct HTTP + SpiderCloud to get exhibits HTML
         attachments: list[tuple[str, str]] = []
         html = _fetch_exhibits(url, self._proxy)
         if html:
@@ -405,42 +499,39 @@ class PDFFetcher:
             if not attachments:
                 logger.debug(f"[PDFFetcher] HTML snippet: {html[:600]}")
 
-        if not attachments:
-            logger.info(f"[PDFFetcher] Trying Browserless for exhibits page of {fcc_id}")
-            attachments = _browserless_fetch_attachments(url)
-
-        if not attachments:
-            logger.warning(f"[PDFFetcher] No Label attachments found for {fcc_id}")
-            return []
-
-        logger.info(
-            f"[PDFFetcher] {len(attachments)} Label attachment(s) for {fcc_id}: "
-            + ", ".join(f"id={a[0]}" for a in attachments)
-        )
-
         out_dir = self._output_root / fcc_id
-        out_dir.mkdir(parents=True, exist_ok=True)
 
-        saved: list[Path] = []
-        for att_id, desc in attachments:
-            pdf_bytes = _direct_get(att_id)
+        # Step 2: if we found attachments via HTML, try direct/SpiderCloud download
+        if attachments:
+            logger.info(
+                f"[PDFFetcher] {len(attachments)} Label attachment(s) for {fcc_id}: "
+                + ", ".join(f"id={a[0]}" for a in attachments)
+            )
+            out_dir.mkdir(parents=True, exist_ok=True)
+            saved: list[Path] = []
+            for att_id, desc in attachments:
+                pdf_bytes = _direct_get(att_id)
+                if not pdf_bytes and self._proxy:
+                    logger.info(f"[PDFFetcher] Direct failed, trying spider.cloud id={att_id}")
+                    pdf_bytes = _spidercloud_get_bytes(att_id, self._proxy)
+                if not pdf_bytes:
+                    logger.warning(f"[PDFFetcher] Direct/SpiderCloud failed id={att_id}, will retry via Browserless")
+                    break  # fall through to Browserless combined path
+                safe_desc = re.sub(r"[^\w\-]", "_", desc)[:50]
+                dest = out_dir / f"{safe_desc}_{att_id}.pdf"
+                dest.write_bytes(pdf_bytes)
+                logger.info(f"[PDFFetcher] Saved {len(pdf_bytes):,} B → {dest}")
+                saved.append(dest)
+                time.sleep(0.5)
+            if saved:
+                return saved
 
-            if not pdf_bytes and self._proxy:
-                logger.info(
-                    f"[PDFFetcher] Direct failed, trying spider.cloud id={att_id}"
-                )
-                pdf_bytes = _spidercloud_get_bytes(att_id, self._proxy)
+        # Step 3: Browserless combined path — finds Label attachments AND downloads
+        # PDFs in one session (uses browser's Akamai session cookies for the download)
+        logger.info(f"[PDFFetcher] Using Browserless combined fetch+download for {fcc_id}")
+        saved = _browserless_fetch_label_pdfs(url, out_dir)
+        if saved:
+            return saved
 
-            if not pdf_bytes:
-                logger.error(f"[PDFFetcher] Failed to download id={att_id}")
-                continue
-
-            safe_desc = re.sub(r"[^\w\-]", "_", desc)[:50]
-            dest = out_dir / f"{safe_desc}_{att_id}.pdf"
-            dest.write_bytes(pdf_bytes)
-            logger.info(f"[PDFFetcher] Saved {len(pdf_bytes):,} B → {dest}")
-            saved.append(dest)
-
-            time.sleep(0.5)  # light rate limiting
-
-        return saved
+        logger.warning(f"[PDFFetcher] No Label PDFs obtained for {fcc_id}")
+        return []

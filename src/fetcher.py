@@ -390,20 +390,28 @@ def _parse_fcc_search_html(html: str, grantee_code: str) -> List[FCCRecord]:
 
             product_code = fcc_id[len(grantee_code):]
 
-            # Extract application_id from the href in the FCC ID cell.
-            # FCC search results link each ID to ViewGrantApplication.cfm with
-            # application_id=<base64> in the query string.
+            # Extract application_id from the ViewExhibitReport link in the row.
+            # The row contains links to ViewExhibitReport.cfm with application_id=<base64>
+            # and to GetTcb731Report.do with applicationId=<different base64>.
+            # We want the one from ViewExhibitReport (exhibits page).
             application_id: Optional[str] = None
-            fcc_id_col = col.get("fcc_id")
-            if fcc_id_col is not None and fcc_id_col < len(raw_cells):
+            from urllib.parse import unquote
+            full_row_html = "".join(raw_cells)
+            # Priority 1: application_id= from ViewExhibitReport URL
+            m = re.search(
+                r"ViewExhibitReport[^\"'<>]*?application_id=([A-Za-z0-9+/%=]+)",
+                full_row_html,
+                re.IGNORECASE,
+            )
+            # Priority 2: any application_id= in the row
+            if not m:
                 m = re.search(
                     r"application_id=([A-Za-z0-9+/%=]+)",
-                    raw_cells[fcc_id_col],
+                    full_row_html,
                     re.IGNORECASE,
                 )
-                if m:
-                    from urllib.parse import unquote
-                    application_id = unquote(m.group(1))
+            if m:
+                application_id = unquote(m.group(1))
 
             # Format location into applicant_name
             city  = get("city")
