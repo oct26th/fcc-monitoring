@@ -98,6 +98,7 @@ class SchedulerConfig(BaseModel):
 class DatabaseConfig(BaseModel):
     """Database configuration."""
     path: str = "data/fcc_monitor.db"
+    since_date: Optional[str] = None  # Ignore records before this date (YYYY-MM-DD)
 
 
 class LoggingConfig(BaseModel):

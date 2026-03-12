@@ -54,6 +54,7 @@ scheduler:
 # Database settings
 database:
   path: "data/fcc_monitor.db"
+  since_date: "2023-01-01"  # Ignore records before this date
 
 # Logging
 logging:

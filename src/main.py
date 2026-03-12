@@ -284,14 +284,15 @@ def main():
         logger.info("*** SEED MODE — writing to DB, no notifications ***")
     logger.info("=" * 60)
 
-    # Parse --since-date
+    # Parse --since-date (CLI overrides settings.yaml)
     since_date: datetime | None = None
-    if args.since_date:
+    since_date_str = args.since_date or settings.database.since_date
+    if since_date_str:
         try:
-            since_date = datetime.strptime(args.since_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-            logger.info(f"Date filter: records on or after {args.since_date}")
+            since_date = datetime.strptime(since_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            logger.info(f"Date filter: records on or after {since_date_str}")
         except ValueError:
-            logger.error(f"Invalid --since-date format: {args.since_date!r} (expected YYYY-MM-DD)")
+            logger.error(f"Invalid since_date format: {since_date_str!r} (expected YYYY-MM-DD)")
             sys.exit(1)
 
     # Override fetcher strategy if requested
