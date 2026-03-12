@@ -105,6 +105,65 @@ class Notifier:
             logger.error(f"Telegram document upload failed: {e}")
         return False
 
+
+    def send_telegram_media_group(self, file_paths: List[Path], caption: str = "") -> bool:
+        """Upload multiple files to Telegram via sendMediaGroup."""
+        if not self.telegram_token or not self.telegram_chat_id or not file_paths:
+            return False
+
+        url = f"https://api.telegram.org/bot{self.telegram_token}/sendMediaGroup"
+        boundary = uuid.uuid4().hex
+
+        def _field(name, value):
+            return (
+                f"--{boundary}\r\n"
+                f'Content-Disposition: form-data; name="{name}"\r\n\r\n'
+                f"{value}\r\n"
+            ).encode()
+
+        media_array = []
+        body_bytes = b""
+        
+        for i, path in enumerate(file_paths):
+            name = f"file{i}"
+            media_item = {
+                "type": "document",
+                "media": f"attach://{name}"
+            }
+            if i == 0 and caption:
+                media_item["caption"] = caption
+                media_item["parse_mode"] = "HTML"
+                
+            media_array.append(media_item)
+            
+            with open(path, "rb") as f:
+                file_data = f.read()
+                
+            body_bytes += (
+                f"--{boundary}\r\n"
+                f'Content-Disposition: form-data; name="{name}"; filename="{path.name}"\r\n'
+                f"Content-Type: application/pdf\r\n\r\n"
+            ).encode() + file_data + b"\r\n"
+
+        import json
+        body_bytes = _field("chat_id", self.telegram_chat_id) + _field("media", json.dumps(media_array)) + body_bytes + f"--{boundary}--\r\n".encode()
+
+        try:
+            req = request.Request(
+                url,
+                data=body_bytes,
+                headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+            )
+            with request.urlopen(req, timeout=60) as resp:
+                if resp.status == 200:
+                    logger.info(f"Telegram media group sent ({len(file_paths)} files)")
+                    return True
+        except Exception as e:
+            logger.error(f"Telegram media group failed: {e}")
+            if hasattr(e, 'read'):
+                logger.error(f"Details: {e.read().decode()}")
+        return False
+
     def notify_single_record(
         self,
         record: FCCRecord,
@@ -136,11 +195,10 @@ class Notifier:
         )
 
         if pdfs:
-            # First PDF carries the full caption
-            self.send_telegram_document(pdfs[0], caption=msg)
-            # Extra PDFs (uncommon) sent without repeating caption
-            for extra_pdf in pdfs[1:]:
-                self.send_telegram_document(extra_pdf, caption=record.fcc_id)
+            if len(pdfs) == 1:
+                self.send_telegram_document(pdfs[0], caption=msg)
+            else:
+                self.send_telegram_media_group(pdfs, caption=msg)
         else:
             self.send_telegram(msg)
 
