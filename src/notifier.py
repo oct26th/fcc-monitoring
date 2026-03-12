@@ -60,7 +60,7 @@ class Notifier:
             
         return False
 
-    def send_telegram_document(self, file_path: Path, caption: str = "") -> bool:
+    def send_telegram_document(self, file_path: Path, caption: str = "", parse_mode: str = "HTML") -> bool:
         """Upload a file (PDF) to Telegram via sendDocument."""
         if not self.telegram_token or not self.telegram_chat_id:
             return False
@@ -71,22 +71,25 @@ class Notifier:
         with open(file_path, "rb") as f:
             file_data = f.read()
 
-        body = (
-            f"--{boundary}\r\n"
-            f'Content-Disposition: form-data; name="chat_id"\r\n\r\n'
-            f"{self.telegram_chat_id}\r\n"
-        )
-        if caption:
-            body += (
+        def _field(name, value):
+            return (
                 f"--{boundary}\r\n"
-                f'Content-Disposition: form-data; name="caption"\r\n\r\n'
-                f"{caption}\r\n"
-            )
-        body_bytes = body.encode() + (
-            f"--{boundary}\r\n"
-            f'Content-Disposition: form-data; name="document"; filename="{file_path.name}"\r\n'
-            f"Content-Type: application/pdf\r\n\r\n"
-        ).encode() + file_data + f"\r\n--{boundary}--\r\n".encode()
+                f'Content-Disposition: form-data; name="{name}"\r\n\r\n'
+                f"{value}\r\n"
+            ).encode()
+
+        body_bytes = (
+            _field("chat_id", self.telegram_chat_id)
+            + (_field("caption", caption) if caption else b"")
+            + (_field("parse_mode", parse_mode) if caption else b"")
+            + (
+                f"--{boundary}\r\n"
+                f'Content-Disposition: form-data; name="document"; filename="{file_path.name}"\r\n'
+                f"Content-Type: application/pdf\r\n\r\n"
+            ).encode()
+            + file_data
+            + f"\r\n--{boundary}--\r\n".encode()
+        )
 
         try:
             req = request.Request(
@@ -101,6 +104,53 @@ class Notifier:
         except Exception as e:
             logger.error(f"Telegram document upload failed: {e}")
         return False
+
+    def notify_single_record(
+        self,
+        record: FCCRecord,
+        brand_name: str,
+        pdfs: Optional[List[Path]] = None,
+    ):
+        """Send one Telegram message per FCC record.
+
+        If PDFs are available, the first PDF is sent as a document with the
+        record details as its caption.  Additional PDFs (rare) are sent plain.
+        If no PDF, the record details are sent as a text message.
+        Discord always receives a plain-text summary (no file upload).
+        """
+        is_c2pc = _is_c2pc(record.application_type)
+        header  = "⚠️ <b>C2PC 變更</b>" if is_c2pc else "📡 <b>新 FCC 申請</b>"
+        date    = _fmt_date(record.grant_date or record.filing_date or "")
+        name    = record.product_name or record.product_description or "—"
+        app_type = record.application_type or "New Filing"
+        fcc_url = f"https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm?SearchType=All&FCCID={record.fcc_id}"
+
+        msg = (
+            f"{header}\n\n"
+            f"🏢 <b>{brand_name}</b> ({record.grantee_code})\n"
+            f"📋 FCC ID: <code>{record.fcc_id}</code>\n"
+            f"📦 產品: {name}\n"
+            f"📝 類型: {app_type}\n"
+            f"📅 日期: {date}\n"
+            f'🔗 <a href="{fcc_url}">FCC 查詢</a>'
+        )
+
+        if pdfs:
+            # First PDF carries the full caption
+            self.send_telegram_document(pdfs[0], caption=msg)
+            # Extra PDFs (uncommon) sent without repeating caption
+            for extra_pdf in pdfs[1:]:
+                self.send_telegram_document(extra_pdf, caption=record.fcc_id)
+        else:
+            self.send_telegram(msg)
+
+        # Discord: plain text only (strip HTML tags)
+        discord_msg = (
+            msg.replace("<b>", "**").replace("</b>", "**")
+               .replace("<code>", "`").replace("</code>", "`")
+               .replace(f'<a href="{fcc_url}">FCC 查詢</a>', fcc_url)
+        )
+        self.send_discord(discord_msg)
 
     def send_discord(self, message: str):
         """Send message via Discord Webhook."""

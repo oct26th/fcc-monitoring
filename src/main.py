@@ -182,10 +182,11 @@ def run_scan(
                     + ("..." if len(notify_records) > 5 else "")
                 )
 
-                # 4a. Download Label PDFs and send to Telegram
+                # 4. Per-record: download PDF + send notification
+                brand_name = brand_names.get(grantee_code, grantee_code)
                 for record in notify_records:
                     if dry_run:
-                        logger.info(f"[dry-run] Would download PDF for {record.fcc_id}")
+                        logger.info(f"[dry-run] Would notify + PDF for {record.fcc_id}")
                         continue
 
                     pdfs = pdf_fetcher.fetch_label_pdfs(record.fcc_id, record.application_id)
@@ -196,23 +197,14 @@ def run_scan(
                         )
                         summary[grantee_code].setdefault("pdfs_downloaded", 0)
                         summary[grantee_code]["pdfs_downloaded"] += len(pdfs)
-                        for pdf_path in pdfs:
-                            notifier.send_telegram_document(
-                                pdf_path,
-                                caption=f"📄 {record.fcc_id} Label PDF",
-                            )
                     else:
                         logger.warning(f"No Label PDFs found for {record.fcc_id}")
 
-                all_new_records.extend(notify_records)
+                    notifier.notify_single_record(record, brand_name, pdfs=pdfs or None)
+                    all_new_records.append(record)
 
-        # 4b. Send grouped Telegram/Discord notification
         if all_new_records:
-            logger.info(f"📡 Sending notification: {len(all_new_records)} new record(s) total")
-            if not dry_run:
-                notifier.notify_new_records(all_new_records, brand_names=brand_names)
-            else:
-                logger.info("[dry-run] Notification skipped")
+            logger.info(f"📡 Sent {len(all_new_records)} notification(s) total")
         else:
             logger.info("No new records across all grantees — nothing to notify")
 
