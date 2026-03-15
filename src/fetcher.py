@@ -65,6 +65,7 @@ class SpiderCloudProxy:
 
     BASE_URL = "https://api.spider.cloud"
     SCRAPE_ENDPOINT = "/scrape"
+    CRAWL_ENDPOINT  = "/crawl"   # multi-page crawl w/ sitemap discovery
 
     # spider.cloud return formats
     FORMAT_HTML     = "html"
@@ -210,6 +211,114 @@ class SpiderCloudProxy:
             extra=extra or None,
         )
         return self._request_with_retry(payload)
+
+    def crawl_with_sitemap(
+        self,
+        base_url: str,
+        *,
+        limit: int = 50,
+        return_format: str = FORMAT_MARKDOWN,
+        path_patterns: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Crawl a website using its sitemap.xml via spider.cloud /crawl endpoint.
+
+        With sitemap=True, spider.cloud will:
+          1. Fetch <base_url>/sitemap.xml (or robots.txt → sitemap link)
+          2. Enumerate all URLs up to *limit*
+          3. Crawl each URL through its infrastructure
+          4. Return rendered content per page
+
+        Args:
+            base_url:      Root domain or specific sitemap URL
+            limit:         Maximum pages to crawl (default 50; raise for broader coverage)
+            return_format: "markdown" (default) or "html"
+            path_patterns: Optional list of URL path substrings to whitelist.
+                           E.g. ["/news", "/press", "/product"] limits crawl
+                           to only matching pages (client-side filter applied
+                           after spider.cloud returns results).
+
+        Returns:
+            List of dicts:  [{"url": str, "content": str}, ...]
+            Empty list on error.
+        """
+        payload: Dict[str, Any] = {
+            "url":           base_url,
+            "sitemap":       True,
+            "limit":         limit,
+            "return_format": return_format,
+            "stealth":       self.stealth,
+            "proxy_enabled": self.proxy_enabled,
+        }
+
+        api_url = self.BASE_URL + self.CRAWL_ENDPOINT
+        pages: List[Dict[str, Any]] = []
+
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                resp = self.session.post(api_url, json=payload)
+                resp.raise_for_status()
+                data = resp.json()
+
+                # /crawl returns a list of page objects
+                raw_pages: list = []
+                if isinstance(data, list):
+                    raw_pages = data
+                elif isinstance(data, dict):
+                    # Some versions wrap in {"data": [...]}
+                    raw_pages = data.get("data") or data.get("pages") or []
+
+                for page in raw_pages:
+                    if not isinstance(page, dict):
+                        continue
+                    page_url     = page.get("url") or page.get("link") or ""
+                    page_content = page.get("content") or page.get("html") or page.get("markdown") or ""
+                    if not page_url or not page_content:
+                        continue
+                    pages.append({"url": page_url, "content": page_content})
+
+                break  # success — exit retry loop
+
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                logger.warning(
+                    f"[SpiderCloudProxy/crawl] HTTP {status} on attempt "
+                    f"{attempt}/{self.max_retries} for {base_url}"
+                )
+                if status in (429, 503) and attempt < self.max_retries:
+                    time.sleep(self.retry_delay * attempt)
+                    continue
+                logger.error(f"[SpiderCloudProxy/crawl] Non-retryable HTTP error: {exc}")
+                break
+
+            except httpx.RequestError as exc:
+                logger.warning(
+                    f"[SpiderCloudProxy/crawl] Request error on attempt "
+                    f"{attempt}/{self.max_retries}: {exc}"
+                )
+                if attempt < self.max_retries:
+                    time.sleep(self.retry_delay * attempt)
+                    continue
+                break
+
+        # Apply optional client-side path filter
+        if path_patterns and pages:
+            filtered = [
+                p for p in pages
+                if any(pat in p["url"] for pat in path_patterns)
+            ]
+            logger.debug(
+                f"[SpiderCloudProxy/crawl] sitemap path filter: "
+                f"{len(pages)} → {len(filtered)} pages "
+                f"(patterns={path_patterns})"
+            )
+            pages = filtered
+
+        logger.info(
+            f"[SpiderCloudProxy/crawl] sitemap crawl of {base_url}: "
+            f"returned {len(pages)} page(s)"
+        )
+        return pages
 
 
 # ===========================================================================

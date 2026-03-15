@@ -11,7 +11,7 @@ Each BrandSource entry is the single source of truth for:
   - js_required   : Whether the page needs JS execution to render content
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field  # noqa: F401 (field used in BrandSource)
 from typing import List, Optional
 
 
@@ -26,6 +26,11 @@ class BrandSource:
     crawl_type: str = "spider"        # "spider" | "direct"
     js_required: bool = True          # Most modern brand sites need JS
     notes: str = ""                   # Known quirks / parsing notes
+    # V2 Stage 2: sitemap-based discovery
+    use_sitemap: bool = False         # If True, BrandCrawler will also run a sitemap crawl
+    sitemap_path_patterns: List[str] = field(default_factory=list)
+                                      # URL path patterns to whitelist during sitemap crawl
+                                      # e.g. ["/news", "/press", "/products"]
 
 
 # ---------------------------------------------------------------------------
@@ -48,6 +53,8 @@ BRAND_SOURCES: List[BrandSource] = [
         ],
         js_required=True,
         notes="Heavy JS SPA. Products may need pagination. Newsroom has category filter.",
+        use_sitemap=True,
+        sitemap_path_patterns=["/newsroom", "/press-release", "/products/mobile-computers"],
     ),
 
     BrandSource(
@@ -64,6 +71,8 @@ BRAND_SOURCES: List[BrandSource] = [
         ],
         js_required=True,
         notes="SPS subdomain is the relevant division. May require region cookie.",
+        use_sitemap=True,
+        sitemap_path_patterns=["/news", "/press", "/products/productivity"],
     ),
 
     BrandSource(

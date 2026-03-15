@@ -426,7 +426,7 @@ class BrandCrawlerPipeline:
         return run
 
     def _crawl_brand(self, brand: BrandSource, run_id: str) -> list[CrawlResult]:
-        """Crawl all URLs for a single brand."""
+        """Crawl all URLs for a single brand (direct page list + optional sitemap)."""
         results = []
         urls_with_type = (
             [(u, "newsroom") for u in brand.newsroom_urls] +
@@ -439,6 +439,143 @@ class BrandCrawlerPipeline:
             if j < len(urls_with_type) - 1:
                 time.sleep(self.INTER_URL_DELAY_SEC)
 
+        # V2 Stage 2: sitemap discovery — find additional product/news URLs
+        if brand.use_sitemap and self._proxy:
+            sitemap_results = self._crawl_brand_via_sitemap(brand, run_id)
+            results.extend(sitemap_results)
+
+        return results
+
+    def _crawl_brand_via_sitemap(
+        self, brand: BrandSource, run_id: str
+    ) -> list[CrawlResult]:
+        """
+        Use Spider.cloud's sitemap crawl to discover and fetch additional pages
+        beyond the manually-listed newsroom/products URLs.
+
+        Strategy:
+          1. Use the brand's primary domain as base for sitemap discovery
+          2. Filter discovered pages by brand.sitemap_path_patterns
+          3. Classify each discovered URL as 'newsroom' or 'products'
+          4. Persist raw + parsed content to Data Lake (same as _crawl_url)
+        """
+        # Derive base domain from first newsroom URL
+        from urllib.parse import urlparse as _uparse
+        base_url = brand.newsroom_urls[0] if brand.newsroom_urls else brand.products_urls[0]
+        parsed   = _uparse(base_url)
+        domain   = f"{parsed.scheme}://{parsed.netloc}"
+
+        logger.info(
+            f"[BrandCrawler] Sitemap crawl for {brand.display_name}: {domain} "
+            f"(patterns={brand.sitemap_path_patterns})"
+        )
+
+        time.sleep(self.INTER_URL_DELAY_SEC)
+        pages = self._proxy.crawl_with_sitemap(
+            domain,
+            limit=30,
+            return_format="markdown",
+            path_patterns=brand.sitemap_path_patterns or None,
+        )
+
+        if not pages:
+            logger.info(f"[BrandCrawler] Sitemap crawl returned 0 pages for {brand.brand_id}")
+            return []
+
+        results = []
+        # Dedup against already-crawled URLs in this run
+        seen_urls = set()
+
+        for j, page in enumerate(pages):
+            page_url     = page["url"]
+            page_content = page["content"]
+
+            if page_url in seen_urls:
+                continue
+            seen_urls.add(page_url)
+
+            # Classify: newsroom vs products
+            path = _uparse(page_url).path.lower()
+            if any(seg in path for seg in ["/news", "/press", "/release", "/blog", "/announcement"]):
+                url_type = "newsroom"
+            elif any(seg in path for seg in ["/product", "/mobile-computer", "/scanner", "/hardware"]):
+                url_type = "products"
+            else:
+                url_type = "newsroom"  # default: treat as news
+
+            # Validate
+            if _is_blocked(page_content):
+                logger.warning(f"[BrandCrawler][sitemap] Blocked: {page_url}")
+                continue
+            if not _has_meaningful_content(page_content):
+                continue
+
+            # Persist raw
+            self.lake.start_run(run_id, brand.brand_id, page_url, f"{url_type}_sitemap")
+            raw_page_id = self.lake.save_raw_page(
+                run_id=run_id,
+                brand_id=brand.brand_id,
+                url=page_url,
+                url_type=f"{url_type}_sitemap",
+                content=page_content,
+                content_format="markdown",
+                write_file=True,
+            )
+            self.lake.finish_run(run_id, page_url, status="success",
+                                 content_length=len(page_content))
+
+            # Parse
+            articles_count = products_count = 0
+            if url_type == "newsroom":
+                articles = parse_news_articles(page_content, page_url, brand.brand_id)
+                for art in articles:
+                    try:
+                        self.lake.upsert_article(
+                            raw_page_id=raw_page_id,
+                            brand_id=brand.brand_id,
+                            title=art["title"],
+                            source_url=page_url,
+                            article_url=art.get("article_url"),
+                            published_date=art.get("published_date"),
+                            summary=art.get("summary"),
+                        )
+                        articles_count += 1
+                    except Exception:
+                        pass
+            else:
+                prods = parse_products(page_content, page_url, brand.brand_id)
+                for prod in prods:
+                    try:
+                        self.lake.upsert_product(
+                            raw_page_id=raw_page_id,
+                            brand_id=brand.brand_id,
+                            product_name=prod["product_name"],
+                            source_url=page_url,
+                            product_url=prod.get("product_url"),
+                            model_number=prod.get("model_number"),
+                            category=prod.get("category"),
+                        )
+                        products_count += 1
+                    except Exception:
+                        pass
+
+            results.append(CrawlResult(
+                brand_id=brand.brand_id,
+                url=page_url,
+                url_type=f"{url_type}_sitemap",
+                status="success",
+                duration_ms=0,
+                articles_found=articles_count,
+                products_found=products_count,
+            ))
+
+            if j < len(pages) - 1:
+                time.sleep(1.0)  # shorter delay between sitemap pages
+
+        logger.info(
+            f"[BrandCrawler] Sitemap discovered {len(results)} extra pages "
+            f"for {brand.brand_id}"
+        )
         return results
 
     def _crawl_url(

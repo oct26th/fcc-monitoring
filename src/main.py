@@ -19,6 +19,7 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import List
 
 from loguru import logger
 
@@ -72,6 +73,80 @@ def _configure_logging(level: str, log_file: str):
     Path(log_file).parent.mkdir(parents=True, exist_ok=True)
     logger.add(log_file, level=level, rotation="10 MB", retention="30 days",
                encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# V2 Pipeline trigger
+# ---------------------------------------------------------------------------
+
+def _trigger_v2_pipeline(new_records: List[FCCRecord], brand_name: str) -> None:
+    """
+    When new FCC records are detected, kick off the V2 brand-site crawler
+    for the corresponding brand to fetch the latest product pages and press releases.
+
+    This implements the V1→V2 hook: FCC新品入庫 → 官網巡邏.
+
+    Design:
+      - Imports are local to avoid circular imports and keep startup fast.
+      - Errors in V2 pipeline never propagate to V1 (fire-and-forget style).
+      - DataLake path mirrors the default in brand_crawler.py.
+    """
+    # Map brand_name (from settings.yaml) to v2 brand_id
+    # brand_name is the display name (e.g. "Zebra Technologies") or grantee owner label
+    try:
+        from .v2.brand_sources import BRAND_SOURCES, get_brand_by_grantee_code
+        from .v2.data_lake import DataLake
+        from .v2.brand_crawler import BrandCrawlerPipeline
+
+        # Collect unique grantee codes from new records
+        grantee_codes = list({r.grantee_code for r in new_records if r.grantee_code})
+        if not grantee_codes:
+            logger.warning("[V2 Hook] No grantee codes found in new records, skipping V2 trigger")
+            return
+
+        # Find matching V2 brand sources
+        brand_ids_to_crawl = set()
+        for code in grantee_codes:
+            brand_source = get_brand_by_grantee_code(code)
+            if brand_source:
+                brand_ids_to_crawl.add(brand_source.brand_id)
+            else:
+                logger.debug(f"[V2 Hook] No V2 brand source found for grantee code: {code}")
+
+        if not brand_ids_to_crawl:
+            logger.info(
+                f"[V2 Hook] No V2 brand sources mapped for grantee codes {grantee_codes}, "
+                f"skipping website crawl."
+            )
+            return
+
+        logger.info(
+            f"[V2 Hook] 🔗 FCC新品觸發 V2 官網巡邏 — "
+            f"brand={brand_name} grantee_codes={grantee_codes} "
+            f"→ v2_brands={list(brand_ids_to_crawl)}"
+        )
+
+        with DataLake() as lake:
+            lake.upsert_brand_sources()
+            pipeline = BrandCrawlerPipeline(lake)
+
+            for brand_id in brand_ids_to_crawl:
+                try:
+                    run = pipeline.run_brand(brand_id)
+                    logger.info(
+                        f"[V2 Hook] ✅ {brand_id} crawl done — "
+                        f"urls={run.urls_attempted} "
+                        f"success={run.urls_success} "
+                        f"articles={run.articles_total} "
+                        f"products={run.products_total}"
+                    )
+                except Exception as exc:
+                    logger.error(f"[V2 Hook] V2 crawl failed for brand {brand_id!r}: {exc}")
+
+    except ImportError as exc:
+        logger.warning(f"[V2 Hook] V2 modules not available, skipping: {exc}")
+    except Exception as exc:
+        logger.error(f"[V2 Hook] Unexpected error in V2 trigger: {exc}")
 
 
 # ---------------------------------------------------------------------------
@@ -202,6 +277,10 @@ def run_scan(
 
                     notifier.notify_single_record(record, brand_name, pdfs=pdfs or None)
                     all_new_records.append(record)
+
+                # V2 Hook: trigger official website crawl for this brand
+                if not dry_run and notify_records:
+                    _trigger_v2_pipeline(notify_records, brand_name)
 
         if all_new_records:
             logger.info(f"📡 Sent {len(all_new_records)} notification(s) total")
