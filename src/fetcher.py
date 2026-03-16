@@ -373,7 +373,7 @@ class SpiderCloudFetcher(BaseFetcher):
 
         form_data = {
             "grantee_code":  grantee_code,
-            "show_records":  "500",
+            "show_records":  "50",
             "action":        "Submit",
         }
 
@@ -574,7 +574,7 @@ export default async ({ page, context }) => {
       const showRecs = document.querySelector('input[name="show_records"]');
       if (showRecs) showRecs.value = '';
     });
-    await page.type('input[name="show_records"]', '500', { delay: 50 });
+    await page.type('input[name="show_records"]', '50', { delay: 50 });
 
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }),
@@ -799,7 +799,7 @@ class SpiderCloudScriptFetcher(BaseFetcher):
         """POST to spider.cloud /scrape with automation_scripts to fill and submit the FCC form."""
         js_fill = (
             f"document.querySelector('input[name=\"grantee_code\"]').value = '{grantee_code}';"
-            "document.querySelector('input[name=\"show_records\"]').value = '500';"
+            "document.querySelector('input[name=\"show_records\"]').value = '50';"
         )
         payload = {
             "url": self.FCC_SEARCH_URL,

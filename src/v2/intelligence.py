@@ -189,9 +189,15 @@ class _LLMClient:
     def __init__(self):
         self.openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
         self.openai_key     = os.environ.get("OPENAI_API_KEY", "")
+        self.minimax_key    = os.environ.get("MINIMAX_API_KEY", "")
         self.model          = os.environ.get("INTEL_MODEL", _DEFAULT_MODEL)
 
-        if self.openrouter_key:
+        if self.minimax_key:
+            self._base_url = "https://api.minimaxi.chat/v1"
+            self._api_key  = self.minimax_key
+            self.model     = os.environ.get("INTEL_MODEL", "abab6.5s-chat") # MiniMax 2.5 equivalent
+            logger.info(f"[IntelLLM] Using MiniMax model: {self.model}")
+        elif self.openrouter_key:
             self._base_url = "https://openrouter.ai/api/v1"
             self._api_key  = self.openrouter_key
             logger.info(f"[IntelLLM] Using OpenRouter model: {self.model}")
