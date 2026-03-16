@@ -15,12 +15,16 @@ Flow per grantee code:
 """
 
 import argparse
+import atexit
+import sqlite3
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List
 
+import httpx
 from loguru import logger
 
 from .config import get_settings
@@ -79,32 +83,26 @@ def _configure_logging(level: str, log_file: str):
 # V2 Pipeline trigger
 # ---------------------------------------------------------------------------
 
-def _trigger_v2_pipeline(new_records: List[FCCRecord], brand_name: str) -> None:
-    """
-    When new FCC records are detected, kick off the V2 brand-site crawler
-    for the corresponding brand to fetch the latest product pages and press releases.
+_v2_executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="v2_hook")
 
-    This implements the V1→V2 hook: FCC新品入庫 → 官網巡邏.
+def _shutdown_executor():
+    logger.info("[V2 Hook] 🛑 Shutting down V2 executor gracefully...")
+    _v2_executor.shutdown(wait=True)
 
-    Design:
-      - Imports are local to avoid circular imports and keep startup fast.
-      - Errors in V2 pipeline never propagate to V1 (fire-and-forget style).
-      - DataLake path mirrors the default in brand_crawler.py.
-    """
-    # Map brand_name (from settings.yaml) to v2 brand_id
-    # brand_name is the display name (e.g. "Zebra Technologies") or grantee owner label
+atexit.register(_shutdown_executor)
+
+
+def _v2_task(new_records: List[FCCRecord], brand_name: str) -> None:
     try:
-        from .v2.brand_sources import BRAND_SOURCES, get_brand_by_grantee_code
+        from .v2.brand_sources import get_brand_by_grantee_code
         from .v2.data_lake import DataLake
         from .v2.brand_crawler import BrandCrawlerPipeline
 
-        # Collect unique grantee codes from new records
         grantee_codes = list({r.grantee_code for r in new_records if r.grantee_code})
         if not grantee_codes:
             logger.warning("[V2 Hook] No grantee codes found in new records, skipping V2 trigger")
             return
 
-        # Find matching V2 brand sources
         brand_ids_to_crawl = set()
         for code in grantee_codes:
             brand_source = get_brand_by_grantee_code(code)
@@ -140,13 +138,39 @@ def _trigger_v2_pipeline(new_records: List[FCCRecord], brand_name: str) -> None:
                         f"articles={run.articles_total} "
                         f"products={run.products_total}"
                     )
+                except httpx.HTTPError as exc:
+                    logger.error(f"[V2 Hook] HTTP error during V2 crawl for {brand_id!r}: {exc}")
+                except httpx.RequestError as exc:
+                    logger.error(f"[V2 Hook] Request error during V2 crawl for {brand_id!r}: {exc}")
+                except sqlite3.Error as exc:
+                    logger.error(f"[V2 Hook] Database error during V2 crawl for {brand_id!r}: {exc}")
+                except ValueError as exc:
+                    logger.error(f"[V2 Hook] Data validation error for {brand_id!r}: {exc}")
                 except Exception as exc:
-                    logger.error(f"[V2 Hook] V2 crawl failed for brand {brand_id!r}: {exc}")
+                    logger.error(f"[V2 Hook] Unexpected error during V2 crawl for {brand_id!r}: {exc}")
 
     except ImportError as exc:
         logger.warning(f"[V2 Hook] V2 modules not available, skipping: {exc}")
+    except sqlite3.Error as exc:
+        logger.error(f"[V2 Hook] DataLake initialization failed due to database error: {exc}")
+    except (httpx.HTTPError, httpx.RequestError) as exc:
+        logger.error(f"[V2 Hook] Network error during initialization: {exc}")
     except Exception as exc:
-        logger.error(f"[V2 Hook] Unexpected error in V2 trigger: {exc}")
+        logger.error(f"[V2 Hook] Unexpected error in V2 task: {exc}")
+
+
+def _trigger_v2_pipeline(new_records: List[FCCRecord], brand_name: str) -> None:
+    """
+    When new FCC records are detected, kick off the V2 brand-site crawler
+    for the corresponding brand to fetch the latest product pages and press releases.
+
+    This implements the V1→V2 hook: FCC新品入庫 → 官網巡邏.
+
+    Design:
+      - Uses a ThreadPoolExecutor for background execution, managing lifecycle properly.
+      - DataLake path mirrors the default in brand_crawler.py.
+    """
+    _v2_executor.submit(_v2_task, new_records, brand_name)
 
 
 # ---------------------------------------------------------------------------
@@ -193,7 +217,17 @@ def run_scan(
                 logger.info(f"── Scanning {target.name} / {grantee_code} ──")
 
                 # 1. Fetch current records from FCC
-                current_records = fetcher.fetch_by_grantee(grantee_code)
+                try:
+                    current_records = fetcher.fetch_by_grantee(grantee_code)
+                except (httpx.HTTPError, httpx.RequestError) as exc:
+                    logger.error(f"Network error fetching records for {grantee_code}: {exc}")
+                    summary[grantee_code] = {"fetched": 0, "new": 0, "error": "network"}
+                    continue
+                except Exception as exc:
+                    logger.error(f"Unexpected error fetching records for {grantee_code}: {exc}")
+                    summary[grantee_code] = {"fetched": 0, "new": 0, "error": "unexpected"}
+                    continue
+
                 if not current_records:
                     logger.warning(
                         f"No records returned for {grantee_code} "
@@ -205,7 +239,11 @@ def run_scan(
                 logger.info(f"Fetched {len(current_records)} records for {grantee_code}")
 
                 # 2. Filter to find genuinely new records
-                new_records = db.filter_new(current_records)
+                try:
+                    new_records = db.filter_new(current_records)
+                except sqlite3.Error as exc:
+                    logger.error(f"Database error filtering new records for {grantee_code}: {exc}")
+                    continue
 
                 # Apply date cutoff (--since-date) — limits what gets saved in seed mode
                 if since_date is not None and new_records:
@@ -237,8 +275,12 @@ def run_scan(
 
                 # 3. Persist new records to DB
                 if not dry_run and new_records:
-                    saved = db.save_records(new_records)
-                    logger.info(f"Saved {saved} record(s) to DB for {grantee_code}")
+                    try:
+                        saved = db.save_records(new_records)
+                        logger.info(f"Saved {saved} record(s) to DB for {grantee_code}")
+                    except sqlite3.Error as exc:
+                        logger.error(f"Database error saving records for {grantee_code}: {exc}")
+
                 elif dry_run and new_records:
                     logger.info(f"[dry-run] Would save {len(new_records)} record(s) to DB")
 
@@ -264,7 +306,15 @@ def run_scan(
                         logger.info(f"[dry-run] Would notify + PDF for {record.fcc_id}")
                         continue
 
-                    pdfs = pdf_fetcher.fetch_label_pdfs(record.fcc_id, record.application_id)
+                    try:
+                        pdfs = pdf_fetcher.fetch_label_pdfs(record.fcc_id, record.application_id)
+                    except (httpx.HTTPError, httpx.RequestError) as exc:
+                        logger.error(f"Network error downloading PDFs for {record.fcc_id}: {exc}")
+                        pdfs = []
+                    except Exception as exc:
+                        logger.error(f"Unexpected error downloading PDFs for {record.fcc_id}: {exc}")
+                        pdfs = []
+
                     if pdfs:
                         logger.info(
                             f"📄 Downloaded {len(pdfs)} PDF(s) for {record.fcc_id}: "
@@ -275,7 +325,13 @@ def run_scan(
                     else:
                         logger.warning(f"No Label PDFs found for {record.fcc_id}")
 
-                    notifier.notify_single_record(record, brand_name, pdfs=pdfs or None)
+                    try:
+                        notifier.notify_single_record(record, brand_name, pdfs=pdfs or None)
+                    except (httpx.HTTPError, httpx.RequestError) as exc:
+                        logger.error(f"Network error sending notification for {record.fcc_id}: {exc}")
+                    except Exception as exc:
+                        logger.error(f"Unexpected error sending notification for {record.fcc_id}: {exc}")
+
                     all_new_records.append(record)
 
                 # V2 Hook: trigger official website crawl for this brand
@@ -393,8 +449,13 @@ def main():
             try:
                 summary = run_scan(**scan_kwargs)
                 logger.info(f"Scan summary: {summary}")
-            except Exception:
-                logger.exception("Unhandled error during scan — will retry next interval")
+            except sqlite3.Error as exc:
+                logger.error(f"Database error during scan: {exc} — will retry next interval")
+            except (httpx.HTTPError, httpx.RequestError) as exc:
+                logger.error(f"Network error during scan: {exc} — will retry next interval")
+            except Exception as exc:
+                logger.exception(f"Unhandled error during scan: {exc} — will retry next interval")
+            
             logger.info(f"Sleeping {args.interval_hours}h until next scan…")
             time.sleep(interval_s)
     else:
